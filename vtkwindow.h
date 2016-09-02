@@ -1,11 +1,18 @@
 #ifndef VTKWINDOW_H
 #define VTKWINDOW_H
 
+#include "window.h"
 
-class VTKWindow
+#include <QVTKWidget.h>
+
+class VTKWindow : public Window
 {
 public:
-    VTKWindow();
+    VTKWindow(QVTKWidget* widget_arg);
+    QVTKWidget* getWidget();
+
+private:
+    QVTKWidget* widget;
 };
 
 #endif // VTKWINDOW_H

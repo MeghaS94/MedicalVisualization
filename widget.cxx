@@ -11,6 +11,7 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
     ui->setupUi(this);
+    controller = new Controller(ui);
 }
 
 Widget::~Widget()

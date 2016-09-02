@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+class Controller;
+
 namespace Ui {
 class Widget;
 }
@@ -16,7 +18,8 @@ public:
     ~Widget();
 
 private:
-    Ui::Widget *ui;
+    Ui::Widget* ui;
+    Controller* controller;
 
 private slots:
     void on_btnOpen_clicked();
