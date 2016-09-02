@@ -1,0 +1,1 @@
+/Users/anusha/Computer Graphics/MedicalVisualization/build/CMakeFiles/MedicalVisualization.dir

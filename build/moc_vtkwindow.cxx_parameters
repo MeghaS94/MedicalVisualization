@@ -1,0 +1,24 @@
+-I/usr/local/Cellar/vtk/7.0.0_2/include/vtk-7.0
+-I/usr/include
+-I/usr/local/include
+-I/usr/local/Cellar/hdf5/1.8.16_1/include
+-I/usr/local/opt/szip/include
+-I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
+-I/usr/include/libxml2
+-I/usr/local/Cellar/qt/4.8.7_2/include
+-F/usr/local/Cellar/qt/4.8.7_2/lib
+-I/usr/local/Cellar/qt/4.8.7_2/include/QtGui
+-I/usr/local/Cellar/qt/4.8.7_2/lib/QtCore.framework/Headers
+-I/Users/anusha/Computer Graphics/MedicalVisualization
+-I/Users/anusha/Computer Graphics/MedicalVisualization/build
+-DvtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)
+-DvtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)
+-DvtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)
+-DvtkRenderingFreeType_AUTOINIT=1(vtkRenderingFreeTypeFontConfig)
+-DvtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)
+-D$<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG>
+-DQT_GUI_LIB
+-DQT_CORE_LIB
+-o
+/Users/anusha/Computer Graphics/MedicalVisualization/build/moc_vtkwindow.cxx
+/Users/anusha/Computer Graphics/MedicalVisualization/vtkwindow.h
