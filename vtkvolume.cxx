@@ -61,13 +61,13 @@ void VTKVolume::render(Window *window)
    volume->SetProperty(property);
    volume->Update();
 
-   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-   renderWindowInteractor->SetRenderWindow (volumeRenderer->GetRenderWindow());
+   //vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+   //renderWindowInteractor->SetRenderWindow (volumeRenderer->GetRenderWindow());
    //vtkSmartPointer<customMouseInteractorStyle1> style = vtkSmartPointer<customMouseInteractorStyle1>::New();
    //renderWindowInteractor->SetInteractorStyle(style);
    //style->setRenderer(this);
-   renderWindowInteractor->Initialize();
-   renderWindowInteractor->Start();
+   //renderWindowInteractor->Initialize();
+   //renderWindowInteractor->Start();
 
    volumeRenderer->RemoveAllViewProps();
    volumeRenderer->AddViewProp(volume);

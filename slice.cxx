@@ -1,6 +1,10 @@
 #include "slice.h"
 
-Slice::Slice()
+Slice::Slice(int type)
 {
+    this->type = type;
+}
 
+int Slice::getType() {
+    return type;
 }

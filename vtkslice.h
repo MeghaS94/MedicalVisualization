@@ -1,11 +1,22 @@
 #ifndef VTKSLICE_H
 #define VTKSLICE_H
 
+#include <vtkImageReslice.h>
+#include <vtkImageReader2.h>
 
-class VTKSlice
+#include "slice.h"
+
+class VTKSlice : public Slice
 {
+private :
+    vtkSmartPointer<vtkImageReslice> slice;
+    vtkSmartPointer<vtkImageReader2> data;
+
 public:
-    VTKSlice();
+    VTKSlice(int type);
+    void readData(string foldername);
+    void createSlice();
+    void render(Window *window );
 };
 
 #endif // VTKSLICE_H
