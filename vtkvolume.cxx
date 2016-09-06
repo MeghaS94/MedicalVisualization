@@ -7,7 +7,12 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderWindow.h>
 #include <vtkSmartVolumeMapper.h>
-
+#include <vtkPolyDataMapper.h>
+#include <vtkCutter.h>
+#include <vtkPlane.h>
+#include <vtkImageData.h>
+#include <vtkProperty.h>
+#include <vtkPlaneSource.h>
 
 VTKVolume::VTKVolume()
 {
@@ -70,7 +75,68 @@ void VTKVolume::render(Window *window)
    //renderWindowInteractor->Start();
 
    volumeRenderer->RemoveAllViewProps();
-   volumeRenderer->AddViewProp(volume);
+   volumeRenderer->AddActor(volume);
+
+
+   /*double bounds[6];
+   data->GetOutput()->GetBounds(bounds);
+
+   vtkSmartPointer<vtkPlane> plane =
+     vtkSmartPointer<vtkPlane>::New();
+   plane->SetOrigin((bounds[1] + bounds[0]) / 2.0,
+                    (bounds[3] + bounds[2]) / 2.0,
+                    bounds[4]);
+   plane->SetNormal(0,0,1);
+
+   // Create cutter
+   double high = plane->EvaluateFunction((bounds[1] + bounds[0]) / 2.0,
+                                         (bounds[3] + bounds[2]) / 2.0,
+                                         bounds[5]);
+
+   vtkSmartPointer<vtkCutter> cutter =
+     vtkSmartPointer<vtkCutter>::New();
+   cutter->SetInputConnection(data->GetOutputPort());
+   cutter->SetCutFunction(plane);
+   cutter->GenerateValues(
+     10,
+     .99,
+     .99 * high);
+
+   vtkSmartPointer<vtkPolyDataMapper> cutterMapper =
+     vtkSmartPointer<vtkPolyDataMapper>::New();
+   cutterMapper->SetInputConnection( cutter->GetOutputPort());
+   cutterMapper->ScalarVisibilityOff();
+
+   // Create cut actor
+   vtkSmartPointer<vtkActor> cutterActor =
+     vtkSmartPointer<vtkActor>::New();
+   cutterActor->GetProperty()->SetColor(1.0,1.0,0);
+   cutterActor->GetProperty()->SetLineWidth(2);
+   cutterActor->SetMapper(cutterMapper);
+   volumeRenderer->AddActor(cutterActor);*/
+
+   // Create a plane
+     vtkSmartPointer<vtkPlaneSource> planeSource =
+       vtkSmartPointer<vtkPlaneSource>::New();
+     planeSource->SetCenter(1.0, 0.0, 0.0);
+     planeSource->SetNormal(1.0, 0.0, 1.0);
+     planeSource->Update();
+
+     vtkPolyData* plane = planeSource->GetOutput();
+
+     // Create a mapper and actor
+     vtkSmartPointer<vtkPolyDataMapper> mapper =
+       vtkSmartPointer<vtkPolyDataMapper>::New();
+   #if VTK_MAJOR_VERSION <= 5
+     mapper->SetInput(plane);
+   #else
+     mapper->SetInputData(plane);
+   #endif
+
+     vtkSmartPointer<vtkActor> actor =
+       vtkSmartPointer<vtkActor>::New();
+     actor->SetMapper(mapper);
+
    volumeRenderer->SetBackground(.0, .0, .0);
    volumeRenderer->ResetCamera();
 
