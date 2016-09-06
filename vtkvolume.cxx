@@ -113,7 +113,7 @@ void VTKVolume::render(Window *window)
    cutterActor->GetProperty()->SetColor(1.0,1.0,0);
    cutterActor->GetProperty()->SetLineWidth(2);
    cutterActor->SetMapper(cutterMapper);
-   volumeRenderer->AddActor(cutterActor);*/
+   volumeRenderer->AddActor(cutterActor);
 
    // Create a plane
      vtkSmartPointer<vtkPlaneSource> planeSource =
@@ -135,7 +135,7 @@ void VTKVolume::render(Window *window)
 
      vtkSmartPointer<vtkActor> actor =
        vtkSmartPointer<vtkActor>::New();
-     actor->SetMapper(mapper);
+     actor->SetMapper(mapper);*/
 
    volumeRenderer->SetBackground(.0, .0, .0);
    volumeRenderer->ResetCamera();
