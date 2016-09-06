@@ -4,6 +4,8 @@
 #include "vtkvolume.h"
 #include "slice.h"
 #include "vtkslice.h"
+#include "surface.h"
+#include "vtksurface.h"
 
 Controller::Controller(Ui::Widget* ui_arg)
 {
@@ -22,6 +24,7 @@ void Controller::loadVolume(string foldername)
    volume->createVolume();
    volume->render(window1);
 
+   /*
    Slice* axialSlice = new VTKSlice(1);
    axialSlice->readData(foldername);
    axialSlice->createSlice();
@@ -36,5 +39,9 @@ void Controller::loadVolume(string foldername)
    sagittalSlice->readData(foldername);
    sagittalSlice->createSlice();
    sagittalSlice->render(window4);
-
+*/
+   Surface* surface = new VTKSurface(500);
+   surface->readData(foldername);
+   surface->createSurface();
+   surface->render(window2);
 }
