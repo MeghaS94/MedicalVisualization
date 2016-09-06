@@ -14,34 +14,41 @@ Controller::Controller(Ui::Widget* ui_arg)
     window2 = new VTKWindow(ui->widget2);
     window3 = new VTKWindow(ui->widget3);
     window4 = new VTKWindow(ui->widget4);
+    volume = new VTKVolume();
+    axialSlice = new VTKSlice(1, this);
+    coronalSlice = new VTKSlice(2, this);
+    sagittalSlice = new VTKSlice(3, this);
 }
 
 void Controller::loadVolume(string foldername)
 {
    //reads and renders volume
-   Volume* volume = new VTKVolume();
    volume->readData(foldername);
    volume->createVolume();
    volume->render(window1);
 
-   /*
-   Slice* axialSlice = new VTKSlice(1);
    axialSlice->readData(foldername);
    axialSlice->createSlice();
    axialSlice->render(window2);
 
-   Slice* coronalSlice = new VTKSlice(2);
    coronalSlice->readData(foldername);
    coronalSlice->createSlice();
    coronalSlice->render(window3);
 
-   Slice* sagittalSlice = new VTKSlice(3);
    sagittalSlice->readData(foldername);
    sagittalSlice->createSlice();
    sagittalSlice->render(window4);
-*/
+
+   updateVolumePlanes();
+/*
    Surface* surface = new VTKSurface(500);
    surface->readData(foldername);
    surface->createSurface();
-   surface->render(window2);
+   surface->render(window2); */
+}
+
+void Controller::updateVolumePlanes() {
+    volume->updatePlane(axialSlice, 1);
+    volume->updatePlane(coronalSlice, 2);
+    volume->updatePlane(sagittalSlice,3);
 }

@@ -7,17 +7,20 @@
 #include <vtkCommand.h>
 
 #include "slice.h"
+#include "controller.h"
 
 class VTKSlice : public Slice
 {
 private :
     vtkSmartPointer<vtkImageReslice> slice;
     vtkSmartPointer<vtkImageReader2> data;
+    Controller* controller;
 
 public:
-    VTKSlice(int type);
+    VTKSlice(int type, Controller* c);
     vtkSmartPointer<vtkImageReslice> getSlice();
     vtkSmartPointer<vtkImageReader2> getData();
+    Controller* getController();
     void readData(string foldername);
     void createSlice();
     void render(Window *window );

@@ -16,10 +16,11 @@
 #include "window.h"
 #include "vtkwindow.h"
 
-VTKSlice::VTKSlice(int type) : Slice(type)
+VTKSlice::VTKSlice(int type, Controller* c) : Slice(type)
 {
     data = vtkSmartPointer<vtkImageReader2>::New();
     slice = vtkSmartPointer<vtkImageReslice>::New();
+    controller = c;
 }
 
 vtkSmartPointer<vtkImageReslice> VTKSlice::getSlice() {
@@ -28,6 +29,10 @@ vtkSmartPointer<vtkImageReslice> VTKSlice::getSlice() {
 
 vtkSmartPointer<vtkImageReader2> VTKSlice::getData() {
     return data;
+}
+
+Controller* VTKSlice::getController() {
+    return controller;
 }
 
 void VTKSlice::readData(string foldername) {
@@ -212,6 +217,7 @@ void vtkSliceInteractionCallback::Execute(vtkObject *, unsigned long event, void
             matrix->SetElement(1, 3, center[1]);
             matrix->SetElement(2, 3, center[2]);
             interactor->Render();
+            slice->getController()->updateVolumePlanes();
         }
         else
         {
