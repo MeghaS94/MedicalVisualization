@@ -25,8 +25,11 @@ void Controller::loadVolume(string foldername)
    //reads and renders volume
    volume->readData(foldername);
    volume->createVolume();
+   volume->makeIntervals();
    volume->render(window1);
 
+
+   /*
    axialSlice->readData(foldername);
    axialSlice->createSlice();
    axialSlice->render(window2);
@@ -40,11 +43,11 @@ void Controller::loadVolume(string foldername)
    sagittalSlice->render(window4);
 
    updateVolumePlanes();
-/*
-   Surface* surface = new VTKSurface(500);
+*/
+   Surface* surface = new VTKSurface(30,60,1,1,1);
    surface->readData(foldername);
    surface->createSurface();
-   surface->render(window2); */
+   surface->render(window2);
 }
 
 void Controller::updateVolumePlanes() {
@@ -52,3 +55,4 @@ void Controller::updateVolumePlanes() {
     volume->updatePlane(coronalSlice, 2);
     volume->updatePlane(sagittalSlice,3);
 }
+

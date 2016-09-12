@@ -16,6 +16,7 @@
 #include <vtkProperty.h>
 #include <vtkPlaneSource.h>
 #include <vtkMatrix4x4.h>
+#include <vtkPointData.h>
 
 VTKVolume::VTKVolume()
 {
@@ -43,10 +44,52 @@ void VTKVolume::createVolume()
     volume->SetMapper(volmapper);
 }
 
+void VTKVolume::makeIntervals()
+{
+    //get max and min intensity
+    double range[2];
+    data->GetOutput()->GetPointData()->GetScalars()->GetRange(range);
+    minIntensity = range[0];
+    maxIntensity = range[1];
+    //make 6 intervals
+    int intervalLen = (maxIntensity - minIntensity+1)/6;
+
+    //get max and min bounds of the grid
+    double bounds[6];
+    data->GetOutput()->GetBounds(bounds);
+    std::cout  << "xmin: " << bounds[0] << " "
+                 << "xmax: " << bounds[1] << std::endl
+                 << "ymin: " << bounds[2] << " "
+                 << "ymax: " << bounds[3] << std::endl
+                 << "zmin: " << bounds[4] << " "
+                 << "zmax: " << bounds[5] << std::endl;
+
+    voxel_count = 0; //count of the total number of voxels
+    for(int x=bounds[0];x<bounds[1];x++)
+    {
+        for(int y=bounds[2];y<bounds[3];y++)
+        {
+            for(int z=bounds[4];z<20;z++) //what to do about this out of range error?
+            {
+                //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
+                float pixel =  (data->GetOutput()->GetScalarComponentAsFloat(x,y,z,0));
+                int bin = pixel/intervalLen;
+                Map[bin] +=1;
+                voxel_count +=1;
+            }
+        }
+    }
+    //return Map;
+}
+
 void VTKVolume::render(Window *window)
 {
     //type cast window to VTKWindow
     ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(volumeRenderer);
+
+    vtkSmartPointer<vtkSmartVolumeMapper> volumeMapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
+    volumeMapper->SetInputConnection(data->GetOutputPort()) ;
+
 
     // Create transfer functions
     vtkSmartPointer<vtkColorTransferFunction> colorFun = vtkSmartPointer<vtkColorTransferFunction>::New();
@@ -54,11 +97,42 @@ void VTKVolume::render(Window *window)
 
     // Create the property and attach the transfer functions
     vtkSmartPointer<vtkVolumeProperty> property = vtkSmartPointer<vtkVolumeProperty>::New();
+    property->ShadeOff();
+    property->SetInterpolationType(VTK_CUBIC_INTERPOLATION );
     property->SetIndependentComponents(true);
     property->SetColor(colorFun);
     property->SetScalarOpacity(opacityFun);
-    property->SetInterpolationTypeToLinear();
+    //property->SetInterpolationTypeToLinear();
 
+    //-------------------------Transfer Functions-------------------------
+    //float red = 0.93; float green = 0.25; float blue = 0.30; float opacity = 1.0;
+
+      int intervalLen = (maxIntensity - minIntensity+1)/6;
+      cout << "Intensity range    " << "Count  " << endl;
+      cout << "--------------------------------" << endl;
+      //Assigning colors to the volume R,G,B.
+      colorFun->AddRGBPoint( minIntensity, 0.0, 0.0, 0.0 );                   cout << minIntensity << " to " << minIntensity +intervalLen << "        " << Map[minIntensity] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen, 0.6, 0.6, 0.6 );       cout << minIntensity+intervalLen << " to " << minIntensity +2*intervalLen << "       " <<Map[minIntensity+1] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*2 ,  0.7, 0.7, 0.7 );   cout << minIntensity+2*intervalLen << " to " << minIntensity +3*intervalLen<< "      "  <<Map[minIntensity+2] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*3,  0.8, 0.0, 0.0 );    cout << minIntensity+3*intervalLen << " to " << minIntensity +4*intervalLen<< "      "  <<Map[minIntensity+3] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*4,  0.0, 0.7, 0.0 );    cout << minIntensity+4*intervalLen << " to " << minIntensity +5*intervalLen<< "      "  <<Map[minIntensity+4] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*5,  0.0, 0.0, 0.6 );    cout << minIntensity+5*intervalLen << " to " << minIntensity +6*intervalLen<< "      "  <<Map[minIntensity+5] << endl;
+      colorFun->AddRGBPoint( maxIntensity,  0.0, 0.0, 0.6 );
+
+      //colorFun->AddRGBPoint( 80 , 0.5, 0.5, 0.5 );
+      //colorFun->AddRGBPoint( 90 , 0.7, 0.7, 0.7);
+
+      //ratio of number of pixels having that intensity/total num of voxels -> to determine opacity
+      opacityFun->AddPoint(minIntensity,0 );
+      opacityFun->AddPoint(minIntensity+intervalLen, 2*Map[minIntensity+1] / voxel_count );
+      opacityFun->AddPoint(minIntensity+2*intervalLen, 2*Map[minIntensity+2] / voxel_count );
+      opacityFun->AddPoint(minIntensity+3*intervalLen, 2*Map[minIntensity+3] / voxel_count  );
+      opacityFun->AddPoint(minIntensity+4*intervalLen, 2*Map[minIntensity+4] / voxel_count );
+      opacityFun->AddPoint(minIntensity+5*intervalLen, 2*Map[minIntensity+5] / voxel_count );
+      opacityFun->AddPoint(maxIntensity, 0.3 );
+      //opacityFun->AddPoint(80, 0.03 );
+
+    //-------------------------------------------------------------------
     //setting the lighting for the volume
     property->ShadeOn();
     property->SetAmbient(0.7);
@@ -67,7 +141,12 @@ void VTKVolume::render(Window *window)
     property->SetSpecularPower(10.0);
     property->SetScalarOpacityUnitDistance(0.8919);
 
+    //std::cout << range[0] << ", " << range[1] << endl;
+    //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarPointer(0,0,0));
+    //cout << pixel[0] << endl;
+
     volume->SetProperty(property);
+    volume->SetMapper(volumeMapper);
     volume->Update();
 
     volumeRenderer->RemoveAllViewProps();
@@ -142,4 +221,5 @@ void VTKVolume::updatePlane(Slice* slice, int type) {
         plane3->Update();
     }
 }
+
 

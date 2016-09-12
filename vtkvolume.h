@@ -24,13 +24,16 @@ private :
     vtkSmartPointer<vtkPlaneSource> plane2;
     vtkSmartPointer<vtkPlaneSource> plane3;
 
+
 public:
+
     VTKVolume();
     void readData(string foldername);
     void createVolume();
     void render(Window *window);
-    void updatePlane(Slice* slice, int type);
-
-};
+    void updatePlane(Slice* slice, int type);    
+    void makeIntervals();
+};  
 
 #endif // VTKVOLUME_H
+
