@@ -17,79 +17,129 @@
 #include <vtkPlaneSource.h>
 #include <vtkMatrix4x4.h>
 #include <vtkPointData.h>
+#include <vtkExtractVOI.h>
 
 VTKVolume::VTKVolume()
 {
-    data = vtkSmartPointer<vtkDICOMImageReader>::New();
+    extractVOI = vtkSmartPointer<vtkExtractVOI>::New();
     volume = vtkSmartPointer<vtkVolume>::New();
     volumeRenderer = vtkSmartPointer<vtkRenderer>::New();
     plane1 = vtkSmartPointer<vtkPlaneSource>::New();
     plane2 = vtkSmartPointer<vtkPlaneSource>::New();
     plane3 = vtkSmartPointer<vtkPlaneSource>::New();
+    actor1 = vtkSmartPointer<vtkActor>::New();
+    actor2 = vtkSmartPointer<vtkActor>::New();
+    actor3 = vtkSmartPointer<vtkActor>::New();
 }
 
-void VTKVolume::readData(string foldername)
+/*void VTKVolume::readData(string foldername)
 {
     data->SetDirectoryName(foldername.c_str());
     data->Update();
+    imageData = data->GetOutput();
+    imageData->GetDimensions(dims);
+    imageData->GetBounds(bounds);
+    cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
+    cout  << "x: " << bounds[0] << "x: " << bounds[1] << " y: " << bounds[2] << " y: " << bounds[3] << " z: " << bounds[4] << " z: " << bounds[5] << endl;
+}*/
+
+void VTKVolume::setImageData(ImageData* data) {
+    imageData = (VTKImageData*) data;
+    imageData->getImageData()->GetExtent(extent);
+    imageData->getImageData()->GetBounds(bounds);
+    //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
+    cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
 }
 
 void VTKVolume::createVolume()
 {
-    data->Update();
+    //data->Update();
     vtkSmartPointer<vtkSmartVolumeMapper> volmapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
-    volmapper->SetInputConnection(data->GetOutputPort());
+    volmapper->SetInputData(imageData->getImageData());
+    //volmapper->SetInputConnection(extractVOI->GetOutputPort());
     volmapper->Update();
     volmapper->SetBlendModeToComposite();
     volume->SetMapper(volmapper);
+}
+
+void VTKVolume::updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax) {
+    extractVOI->SetInputData(imageData->getOriginalImageData());
+    extractVOI->SetVOI(xmin,xmax,ymin,ymax,zmin,zmax);
+    extractVOI->Update();
+    imageData->setImageData(extractVOI->GetOutput());
+    imageData->getImageData()->GetExtent(extent);
+    imageData->getImageData()->GetBounds(bounds);
+    changePlanes();
+    createVolume();
+    volumeRenderer->GetRenderWindow()->Render();
+    cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
+    //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
+    //cout  << "x: " << bounds[0] << "x: " << bounds[1] << " y: " << bounds[2] << " y: " << bounds[3] << " z: " << bounds[4] << " z: " << bounds[5] << endl;
+    //imageData->getOriginalImageData()->GetDimensions(dims);
+    //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
+    //data->SetInputData(extractVOI->GetOutput());
+    //data->Update();
 }
 
 void VTKVolume::makeIntervals()
 {
     //get max and min intensity
     double range[2];
-    data->GetOutput()->GetPointData()->GetScalars()->GetRange(range);
+    imageData->getImageData()->GetPointData()->GetScalars()->GetRange(range);
     minIntensity = range[0];
     maxIntensity = range[1];
     //make 6 intervals
-    int intervalLen = (maxIntensity - minIntensity+1)/6;
+    float intervalLen = (maxIntensity - minIntensity)/6.0;
 
     //get max and min bounds of the grid
-    double bounds[6];
-    data->GetOutput()->GetBounds(bounds);
-    std::cout  << "xmin: " << bounds[0] << " "
-                 << "xmax: " << bounds[1] << std::endl
-                 << "ymin: " << bounds[2] << " "
-                 << "ymax: " << bounds[3] << std::endl
-                 << "zmin: " << bounds[4] << " "
-                 << "zmax: " << bounds[5] << std::endl;
-
+    //cout  << "x: " << bounds[0] << " y: " << bounds[1] << " z: " << bounds[2] << endl;
+    cout  << "min intensity: " << range[0] << " max intensity: " << range[1] << endl;
+    cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
+    //cout << intervalLen << endl;
     voxel_count = 0; //count of the total number of voxels
-    for(int x=bounds[0];x<bounds[1];x++)
+    for(int x=extent[0];x<=extent[1];x++)
     {
-        for(int y=bounds[2];y<bounds[3];y++)
+        for(int y=extent[2];y<=extent[3];y++)
         {
-            for(int z=bounds[4];z<20;z++) //what to do about this out of range error?
+            for(int z=extent[4];z<=extent[5];z++)
             {
                 //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
-                float pixel =  (data->GetOutput()->GetScalarComponentAsFloat(x,y,z,0));
-                int bin = pixel/intervalLen;
-                Map[bin] +=1;
+                float pixel =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
+                //if(pixel>=50) {
+                    int bin = (int)((pixel-minIntensity)/intervalLen);
+                    Map[bin] +=1;
+                //}
                 voxel_count +=1;
             }
         }
     }
-    //return Map;
+}
+
+void VTKVolume::changePlanes() {
+    double xpad = (bounds[1]-bounds[0])/10.0;
+    double ypad = (bounds[3]-bounds[2])/10.0;
+    double zpad = (bounds[5]-bounds[4])/10.0;
+    plane1->SetOrigin(bounds[0]-xpad, bounds[2]-ypad, bounds[4]-zpad);
+    plane1->SetPoint1(bounds[1]+xpad, bounds[2]-ypad, bounds[4]-zpad);
+    plane1->SetPoint2(bounds[0]-xpad, bounds[3]+ypad, bounds[4]-zpad);
+    plane1->Update();
+
+    plane2->SetOrigin(bounds[0]-xpad, bounds[2]-ypad, bounds[4]-zpad);
+    plane2->SetPoint1(bounds[1]+xpad, bounds[2]-ypad, bounds[4]-zpad);
+    plane2->SetPoint2(bounds[0]-xpad, bounds[2]-ypad, bounds[5]+zpad);
+    plane2->Update();
+
+    plane3->SetOrigin(bounds[0]-xpad, bounds[2]-ypad, bounds[4]-zpad);
+    plane3->SetPoint1(bounds[0]-xpad, bounds[2]-ypad, bounds[5]+zpad);
+    plane3->SetPoint2(bounds[0]-xpad, bounds[3]+ypad, bounds[4]-zpad);
+    plane3->Update();
+
 }
 
 void VTKVolume::render(Window *window)
 {
     //type cast window to VTKWindow
     ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(volumeRenderer);
-
-    vtkSmartPointer<vtkSmartVolumeMapper> volumeMapper = vtkSmartPointer<vtkSmartVolumeMapper>::New();
-    volumeMapper->SetInputConnection(data->GetOutputPort()) ;
-
 
     // Create transfer functions
     vtkSmartPointer<vtkColorTransferFunction> colorFun = vtkSmartPointer<vtkColorTransferFunction>::New();
@@ -107,28 +157,30 @@ void VTKVolume::render(Window *window)
     //-------------------------Transfer Functions-------------------------
     //float red = 0.93; float green = 0.25; float blue = 0.30; float opacity = 1.0;
 
-      int intervalLen = (maxIntensity - minIntensity+1)/6;
+      float intervalLen = (maxIntensity - minIntensity)/6.0;
       cout << "Intensity range    " << "Count  " << endl;
       cout << "--------------------------------" << endl;
       //Assigning colors to the volume R,G,B.
-      colorFun->AddRGBPoint( minIntensity, 0.0, 0.0, 0.0 );                   cout << minIntensity << " to " << minIntensity +intervalLen << "        " << Map[minIntensity] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen, 0.6, 0.6, 0.6 );       cout << minIntensity+intervalLen << " to " << minIntensity +2*intervalLen << "       " <<Map[minIntensity+1] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*2 ,  0.7, 0.7, 0.7 );   cout << minIntensity+2*intervalLen << " to " << minIntensity +3*intervalLen<< "      "  <<Map[minIntensity+2] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*3,  0.8, 0.0, 0.0 );    cout << minIntensity+3*intervalLen << " to " << minIntensity +4*intervalLen<< "      "  <<Map[minIntensity+3] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*4,  0.0, 0.7, 0.0 );    cout << minIntensity+4*intervalLen << " to " << minIntensity +5*intervalLen<< "      "  <<Map[minIntensity+4] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*5,  0.0, 0.0, 0.6 );    cout << minIntensity+5*intervalLen << " to " << minIntensity +6*intervalLen<< "      "  <<Map[minIntensity+5] << endl;
+      colorFun->AddRGBPoint( minIntensity, 0.0, 0.0, 0.0 );                   cout << minIntensity << " to " << minIntensity +intervalLen << "        " << Map[0] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen, 0.6, 0.6, 0 );       cout << minIntensity+intervalLen << " to " << minIntensity +2*intervalLen << "       " <<Map[1] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*2 ,  0, 0.7, 0.7 );   cout << minIntensity+2*intervalLen << " to " << minIntensity +3*intervalLen<< "      "  <<Map[2] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*3,  0.8, 0.0, 0.0 );    cout << minIntensity+3*intervalLen << " to " << minIntensity +4*intervalLen<< "      "  <<Map[3] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*4,  0.0, 0.7, 0.0 );    cout << minIntensity+4*intervalLen << " to " << minIntensity +5*intervalLen<< "      "  <<Map[4] << endl;
+      colorFun->AddRGBPoint( minIntensity+intervalLen*5,  0.0, 0.0, 0.6 );    cout << minIntensity+5*intervalLen << " to " << minIntensity +6*intervalLen<< "      "  <<Map[5] << endl;
       colorFun->AddRGBPoint( maxIntensity,  0.0, 0.0, 0.6 );
 
       //colorFun->AddRGBPoint( 80 , 0.5, 0.5, 0.5 );
       //colorFun->AddRGBPoint( 90 , 0.7, 0.7, 0.7);
+      //for(int i=0; i<1000; i+=10)
+      //    printf("%d %f %f %f\n", i, colorFun->GetRedValue(i), colorFun->GetGreenValue(i), colorFun->GetBlueValue(i));
 
       //ratio of number of pixels having that intensity/total num of voxels -> to determine opacity
       opacityFun->AddPoint(minIntensity,0 );
-      opacityFun->AddPoint(minIntensity+intervalLen, 2*Map[minIntensity+1] / voxel_count );
-      opacityFun->AddPoint(minIntensity+2*intervalLen, 2*Map[minIntensity+2] / voxel_count );
-      opacityFun->AddPoint(minIntensity+3*intervalLen, 2*Map[minIntensity+3] / voxel_count  );
-      opacityFun->AddPoint(minIntensity+4*intervalLen, 2*Map[minIntensity+4] / voxel_count );
-      opacityFun->AddPoint(minIntensity+5*intervalLen, 2*Map[minIntensity+5] / voxel_count );
+      opacityFun->AddPoint(minIntensity+intervalLen, 2*Map[1] / voxel_count );
+      opacityFun->AddPoint(minIntensity+2*intervalLen, 2*Map[2] / voxel_count );
+      opacityFun->AddPoint(minIntensity+3*intervalLen, 2*Map[3] / voxel_count  );
+      opacityFun->AddPoint(minIntensity+4*intervalLen, 2*Map[4] / voxel_count );
+      opacityFun->AddPoint(minIntensity+5*intervalLen, 2*Map[5] / voxel_count );
       opacityFun->AddPoint(maxIntensity, 0.3 );
       //opacityFun->AddPoint(80, 0.03 );
 
@@ -141,39 +193,19 @@ void VTKVolume::render(Window *window)
     property->SetSpecularPower(10.0);
     property->SetScalarOpacityUnitDistance(0.8919);
 
-    //std::cout << range[0] << ", " << range[1] << endl;
-    //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarPointer(0,0,0));
-    //cout << pixel[0] << endl;
-
     volume->SetProperty(property);
-    volume->SetMapper(volumeMapper);
     volume->Update();
 
     volumeRenderer->RemoveAllViewProps();
     volumeRenderer->AddActor(volume);
 
-    plane1->SetOrigin(0.0, 0.0, 0.0);
-    plane1->SetNormal(0.0, 0.0, 1.0);
-    plane1->SetPoint1(200.0, 0.0, 0.0);
-    plane1->SetPoint2(0.0, 200.0, 0.0);
-
-    plane2->SetOrigin(0.0, 0.0, 0.0);
-    plane2->SetNormal(0.0, 0.0, 1.0);
-    plane2->SetPoint1(200.0, 0.0, 0.0);
-    plane2->SetPoint2(0.0, 0.0, 200.0);
-
-    plane3->SetOrigin(0.0, 0.0, 0.0);
-    plane3->SetNormal(0.0, 0.0, 1.0);
-    plane3->SetPoint1(0.0, 0.0, 200.0);
-    plane3->SetPoint2(0.0, 200.0, 0.0);
+    changePlanes();
 
     vtkPolyData* p1 = plane1->GetOutput();
 
     // Create a mapper and actor
     vtkSmartPointer<vtkPolyDataMapper> mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper1->SetInputData(p1);
-
-    vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
     actor1->SetMapper(mapper1);
     volumeRenderer->AddActor(actor1);
 
@@ -182,8 +214,6 @@ void VTKVolume::render(Window *window)
     // Create a mapper and actor
     vtkSmartPointer<vtkPolyDataMapper> mapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper2->SetInputData(p2);
-
-    vtkSmartPointer<vtkActor> actor2 = vtkSmartPointer<vtkActor>::New();
     actor2->SetMapper(mapper2);
     volumeRenderer->AddActor(actor2);
 
@@ -192,8 +222,6 @@ void VTKVolume::render(Window *window)
     // Create a mapper and actor
     vtkSmartPointer<vtkPolyDataMapper> mapper3 = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper3->SetInputData(p3);
-
-    vtkSmartPointer<vtkActor> actor3 = vtkSmartPointer<vtkActor>::New();
     actor3->SetMapper(mapper3);
     volumeRenderer->AddActor(actor3);
 
@@ -220,6 +248,30 @@ void VTKVolume::updatePlane(Slice* slice, int type) {
                           ((VTKSlice *) slice)->getSlice()->GetResliceAxes()->GetElement(2, 3));
         plane3->Update();
     }
+    volumeRenderer->GetRenderWindow()->Render();
 }
 
+void VTKVolume::axialPlane(bool visibility) {
+    if(visibility)
+        actor1->VisibilityOn();
+    else
+        actor1->VisibilityOff();
+    volumeRenderer->GetRenderWindow()->Render();
+}
+
+void VTKVolume::coronalPlane(bool visibility) {
+    if(visibility)
+        actor2->VisibilityOn();
+    else
+        actor2->VisibilityOff();
+    volumeRenderer->GetRenderWindow()->Render();
+}
+
+void VTKVolume::sagittalPlane(bool visibility) {
+    if(visibility)
+        actor3->VisibilityOn();
+    else
+        actor3->VisibilityOff();
+    volumeRenderer->GetRenderWindow()->Render();
+}
 

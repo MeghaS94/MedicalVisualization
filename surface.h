@@ -3,6 +3,7 @@
 
 #include <string>
 #include "window.h"
+#include "imagedata.h"
 
 using namespace std;
 
@@ -10,11 +11,13 @@ class Surface
 {
 public:
     Surface(double isovalue_s, double isovalue_end);
-    void virtual render(Window *window) = 0;
-    void virtual readData(string foldername) = 0;
-    void virtual createSurface() = 0;
+    virtual void render(Window *window) = 0;
+    virtual void setImageData(ImageData* data) = 0;
+    virtual void createSurface() = 0;
     double getIsovalueStart();
     double getIsovalueEnd();
+    void setIsovalueStart(double val);
+    void setIsovalueEnd(double val);
 
 protected:
     double isovalue_start; //bone, tissue etc

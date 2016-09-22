@@ -13,3 +13,11 @@ double Surface::getIsovalueStart() {
 double Surface::getIsovalueEnd() {
     return isovalue_end;
 }
+
+void Surface::setIsovalueStart(double val) {
+    isovalue_start = val;
+}
+
+void Surface::setIsovalueEnd(double val) {
+    isovalue_end = val;
+}

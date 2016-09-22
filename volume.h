@@ -3,6 +3,7 @@
 
 #include "window.h"
 #include "slice.h"
+#include "imagedata.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -13,16 +14,22 @@ class Volume
 {
 protected:
     int voxel_count; //count of total number of voxels in the volume
-public:
     map<int, float> Map; //mapping the number of voxels to range of intensity
     float minIntensity ;
     float maxIntensity;
+public:
     Volume();
-    void virtual render(Window* window) = 0;
-    void virtual readData(string foldername) = 0;
-    void virtual createVolume() = 0;
-    void virtual makeIntervals() =0;
-    void virtual updatePlane(Slice* slice, int type)=0;
+    virtual void render(Window* window) = 0;
+    virtual void setImageData(ImageData* data) = 0;
+    virtual void createVolume() = 0;
+    virtual void updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax)=0;
+    virtual void makeIntervals() =0;
+    virtual void updatePlane(Slice* slice, int type)=0;
+    virtual void axialPlane(bool visibility)=0;
+    virtual void coronalPlane(bool visibility)=0;
+    virtual void sagittalPlane(bool visibility)=0;
+    float getMinIntensity();
+    float getMaxIntensity();
 };
 
 #endif // VOLUME_H

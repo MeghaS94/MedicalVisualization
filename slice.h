@@ -3,6 +3,7 @@
 
 #include <string>
 #include "window.h"
+#include "imagedata.h"
 
 using namespace std;
 
@@ -10,9 +11,10 @@ class Slice
 {
 public:
     Slice(int type);
-    void virtual render(Window *window) = 0;
-    void virtual readData(string foldername) = 0;
-    void virtual createSlice() = 0;
+    virtual void render(Window *window) = 0;
+    virtual void setImageData(ImageData* data) = 0;
+    virtual void createSlice() = 0;
+    virtual void updateSlice() = 0;
     int getType();
 
 protected:

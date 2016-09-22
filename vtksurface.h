@@ -2,6 +2,7 @@
 #define VTKSURFACE_H
 
 #include "surface.h"
+#include "vtkimagedata.h"
 #include <string>
 #include <vtkSmartPointer.h>
 #include <vtkMarchingCubes.h>
@@ -14,16 +15,19 @@ using namespace std;
 class VTKSurface : public Surface
 {
 private :
-    vtkSmartPointer<vtkImageData> volume;
+    //vtkSmartPointer<vtkImageData> volume;
     //vtkSmartPointer<vtkMarchingCubes> surface;
     vtkSmartPointer<vtkMarchingContourFilter> surface;
-    vtkSmartPointer<vtkDICOMImageReader> reader;
+    VTKImageData* imageData;
+    vtkSmartPointer<vtkImageData> modifiedData;
     float red; float blue; float green;
+    int extent[6];
+    double bounds[6];
 
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
     VTKSurface(double isovalue_start, double isovalue_end, float r, float g, float b);
-    void readData(string foldername);
+    void setImageData(ImageData* data);
     void render(Window *window);
     void createSurface();
     //double getIsovalue();

@@ -18,8 +18,8 @@
 
 VTKSlice::VTKSlice(int type, Controller* c) : Slice(type)
 {
-    data = vtkSmartPointer<vtkImageReader2>::New();
     slice = vtkSmartPointer<vtkImageReslice>::New();
+    renderer = vtkSmartPointer<vtkRenderer>::New();
     controller = c;
 }
 
@@ -27,15 +27,15 @@ vtkSmartPointer<vtkImageReslice> VTKSlice::getSlice() {
     return slice;
 }
 
-vtkSmartPointer<vtkImageReader2> VTKSlice::getData() {
-    return data;
+vtkSmartPointer<vtkImageData> VTKSlice::getData() {
+    return imageData->getImageData();
 }
 
 Controller* VTKSlice::getController() {
     return controller;
 }
 
-void VTKSlice::readData(string foldername) {
+/*void VTKSlice::readData(string foldername) {
     vtkSmartPointer<vtkDICOMImageReader> temp_data = vtkSmartPointer<vtkDICOMImageReader>::New();
     temp_data->SetDirectoryName(foldername.c_str());
     temp_data->Update();
@@ -43,21 +43,15 @@ void VTKSlice::readData(string foldername) {
     data->SetDataByteOrderToLittleEndian();
     data->UpdateWholeExtent();
     data->Update();
+}*/
+
+void VTKSlice::setImageData(ImageData* data) {
+    imageData = (VTKImageData*) data;
 }
 
 void VTKSlice::createSlice() {
-    int extent[6];
-    double spacing[3];
-    double origin[3];
-
-    data->GetOutputInformation(0)->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), extent);
-    data->GetOutput()->GetSpacing(spacing);
-    data->GetOutput()->GetOrigin(origin);
-
     double center[3];
-    center[0] = origin[0] + spacing[0] * 0.5 * (extent[0] + extent[1]);
-    center[1] = origin[1] + spacing[1] * 0.5 * (extent[2] + extent[3]);
-    center[2] = origin[2] + spacing[2] * 0.5 * (extent[4] + extent[5]);
+    imageData->getImageData()->GetCenter(center);
 
     // Matrices for axial, coronal, sagittal, oblique view orientations
     static double axialElements[16] = {
@@ -90,18 +84,30 @@ void VTKSlice::createSlice() {
     resliceAxes->SetElement(1, 3, center[1]);
     resliceAxes->SetElement(2, 3, center[2]);
 
-    slice->SetInputConnection(data->GetOutputPort());
+    slice->SetInputData(imageData->getImageData());
     slice->SetOutputDimensionality(2);
     slice->SetResliceAxes(resliceAxes);
     slice->SetInterpolationModeToLinear();
+}
+
+void VTKSlice::updateSlice() {
+    double center[3];
+    imageData->getImageData()->GetCenter(center);
+    slice->SetInputData(imageData->getImageData());
+    vtkMatrix4x4 *matrix = slice->GetResliceAxes();
+    matrix->SetElement(0, 3, center[0]);
+    matrix->SetElement(1, 3, center[1]);
+    matrix->SetElement(2, 3, center[2]);
+    slice->Update();
+    renderer->GetRenderWindow()->Render();
 }
 
 void VTKSlice::render(Window* window ) {
     // Create a greyscale lookup table
     vtkSmartPointer<vtkLookupTable> table =
       vtkSmartPointer<vtkLookupTable>::New();
-    double min = data->GetOutput()->GetScalarRange()[0];
-    double max = data->GetOutput()->GetScalarRange()[1];
+    double min = imageData->getImageData()->GetScalarRange()[0];
+    double max = imageData->getImageData()->GetScalarRange()[1];
     table->SetRange(min, max); // image intensity range
     table->SetValueRange(0.0, 1.0); // from black to white
     table->SetSaturationRange(0.0, 0.0); // no color saturation
@@ -119,8 +125,6 @@ void VTKSlice::render(Window* window ) {
       vtkSmartPointer<vtkImageActor>::New();
     actor->GetMapper()->SetInputConnection(color->GetOutputPort());
 
-    vtkSmartPointer<vtkRenderer> renderer =
-      vtkSmartPointer<vtkRenderer>::New();
     renderer->AddActor(actor);
 
     ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(renderer);
@@ -190,7 +194,7 @@ void vtkSliceInteractionCallback::Execute(vtkObject *, unsigned long event, void
             slice->getSlice()->Update();
             double sliceSpacing = slice->getSlice()->GetOutput()->GetSpacing()[2];
             double bounds[6];
-            slice->getData()->GetOutput()->GetBounds(bounds);
+            slice->getData()->GetBounds(bounds);
             vtkMatrix4x4 *matrix = slice->getSlice()->GetResliceAxes();
             // move the center point that we are slicing through
             double point[4];
