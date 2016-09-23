@@ -45,17 +45,17 @@ void Controller::initialize()
     //axialSlice->readData(foldername);
     axialSlice->setImageData(imageData);
     axialSlice->createSlice();
-    axialSlice->render(window2);
+    //axialSlice->render(window2);
 
     //coronalSlice->readData(foldername);
     coronalSlice->setImageData(imageData);
     coronalSlice->createSlice();
-    coronalSlice->render(window3);
+    //coronalSlice->render(window3);
 
     //sagittalSlice->readData(foldername);
     sagittalSlice->setImageData(imageData);
     sagittalSlice->createSlice();
-    sagittalSlice->render(window4);
+    //sagittalSlice->render(window4);
 
     updateVolumePlanes();
 
