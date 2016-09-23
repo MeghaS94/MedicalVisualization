@@ -9,6 +9,8 @@
 #include <vtkImageData.h>
 #include <vtkMarchingContourFilter.h>
 #include <vtkDICOMImageReader.h>
+#include <vtkPolyDataConnectivityFilter.h>
+
 
 using namespace std;
 
@@ -18,6 +20,7 @@ private :
     //vtkSmartPointer<vtkImageData> volume;
     //vtkSmartPointer<vtkMarchingCubes> surface;
     vtkSmartPointer<vtkMarchingContourFilter> surface;
+    vtkSmartPointer<vtkPolyDataConnectivityFilter> confilter;
     VTKImageData* imageData;
     vtkSmartPointer<vtkImageData> modifiedData;
     float red; float blue; float green;

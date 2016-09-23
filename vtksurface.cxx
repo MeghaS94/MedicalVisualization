@@ -6,6 +6,8 @@
 #include <vtkRenderer.h>
 #include <vtkProperty.h>
 #include <vtkContourFilter.h>
+#include <vtkPolyDataConnectivityFilter.h>
+#include <vtkPolyData.h>
 #include "vtksurface.h"
 #include "window.h"
 #include "vtkwindow.h"
@@ -13,6 +15,7 @@
 
 VTKSurface::VTKSurface(double isoValue_start, double isoValue_end) : Surface(isoValue_start, isoValue_end)
 {
+    //this constructor is not being used anywhere
     modifiedData = vtkSmartPointer<vtkImageData>::New();
     //could use vtk contour filter to get iso-surfaces from ranges
     //surface = vtkSmartPointer<vtkMarchingCubes>::New();
@@ -26,6 +29,7 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, floa
     //could use vtk contour filter to get iso-surfaces from ranges
     //surface = vtkSmartPointer<vtkMarchingCubes>::New();
     surface = vtkSmartPointer<vtkMarchingContourFilter>::New();
+    confilter = vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
     surface->SetNumberOfContours(1);
     red = r; blue = b; green =g;
 }
@@ -63,13 +67,28 @@ void VTKSurface::createSurface()
     surface->SetInputData(modifiedData);
     surface->ComputeNormalsOn();
     surface->SetValue(0, 0.5);
+
+
+
+    confilter->SetInputConnection(surface->GetOutputPort());
+    confilter->SetExtractionModeToLargestRegion();
+    confilter->Update();
+
+    cout <<  " Num of verts : "<< confilter->GetOutput()->GetNumberOfVerts() << endl;
+    cout <<  " Num of polys : "<< confilter->GetOutput()->GetNumberOfPolys() << endl;
+    cout <<  " Num of strips : "<< confilter->GetOutput()->GetNumberOfStrips() << endl;
+
+    cout <<  " Num of points : "<< confilter->GetOutput()->GetNumberOfPoints() << endl;
+
+
+
     //surface->update();
 }
 
 void VTKSurface::render(Window *window)
 {
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(surface->GetOutputPort());
+    mapper->SetInputConnection(confilter->GetOutputPort());
     mapper->ScalarVisibilityOff();
 
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
