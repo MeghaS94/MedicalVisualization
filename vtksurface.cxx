@@ -116,13 +116,14 @@ void VTKSurface::createSurface()
 void VTKSurface::findConnectedVertsRecur(vtkIdType ID)
 {
     //maybe you should do a malloc?
-    vtkIdType *connectedCells;
+    int num_of_cells = cellLinksFilter->GetNcells(ID);
+    vtkIdType *connectedCells = (vtkIdType*)malloc((num_of_cells)*sizeof(vtkIdType));
 
     vtkIdType npts; vtkIdType *pts;
 
     //find cell links and call recursion on them
     connectedCells = cellLinksFilter->GetCells(ID);
-    int num_of_cells = cellLinksFilter->GetNcells(ID);
+
     //vector to perform set operation on
     set<vtkIdType> all_connected_cells;
 
