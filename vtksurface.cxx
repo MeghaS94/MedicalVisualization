@@ -8,6 +8,9 @@
 #include <vtkContourFilter.h>
 #include <vtkPolyDataConnectivityFilter.h>
 #include <vtkPolyData.h>
+#include <vtkCellArray.h>
+//#include <vtkIdType.h>
+#include <vtkCellLinks.h>
 #include "vtksurface.h"
 #include "window.h"
 #include "vtkwindow.h"
@@ -19,8 +22,10 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end) : Surface(iso
     modifiedData = vtkSmartPointer<vtkImageData>::New();
     //could use vtk contour filter to get iso-surfaces from ranges
     //surface = vtkSmartPointer<vtkMarchingCubes>::New();
-    surface = vtkSmartPointer<vtkMarchingContourFilter>::New();
+    surface = vtkSmartPointer<vtkContourFilter>::New();
     surface->SetNumberOfContours(1);
+    polyArray = vtkSmartPointer<vtkCellArray>::New();
+    cellLinksFilter = vtkSmartPointer<vtkCellLinks>::New();
 }
 
 VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, float g, float b) : Surface(isoValue_start, isoValue_end)
@@ -28,8 +33,8 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, floa
     modifiedData = vtkSmartPointer<vtkImageData>::New();
     //could use vtk contour filter to get iso-surfaces from ranges
     //surface = vtkSmartPointer<vtkMarchingCubes>::New();
-    surface = vtkSmartPointer<vtkMarchingContourFilter>::New();
-    confilter = vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
+    surface = vtkSmartPointer<vtkContourFilter>::New();
+    //confilter = vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
     surface->SetNumberOfContours(1);
     red = r; blue = b; green =g;
 }
@@ -64,31 +69,109 @@ void VTKSurface::createSurface()
             }
         }
     }
+
     surface->SetInputData(modifiedData);
     surface->ComputeNormalsOn();
     surface->SetValue(0, 0.5);
+    surface->GenerateTrianglesOn();
+
+    //confilter->SetInputConnection(surface->GetOutputPort());
+    //confilter->SetExtractionModeToLargestRegion();
+    //confilter->Update();
 
 
+    polyArray = surface->GetOutput()->GetPolys();
+    polyArray->InitTraversal();
 
-    confilter->SetInputConnection(surface->GetOutputPort());
-    confilter->SetExtractionModeToLargestRegion();
-    confilter->Update();
+    vtkIdType npts; vtkIdType *pts;
 
-    cout <<  " Num of verts : "<< confilter->GetOutput()->GetNumberOfVerts() << endl;
-    cout <<  " Num of polys : "<< confilter->GetOutput()->GetNumberOfPolys() << endl;
-    cout <<  " Num of strips : "<< confilter->GetOutput()->GetNumberOfStrips() << endl;
+    int count_not3 =0;
+    int count_3 =0;
+    while(polyArray->GetNextCell(npts, pts))
+    {
+       if(npts != 3)
+            {
+           count_not3 +=1;
+                }
+        else if (npts == 3)
+            {
+            count_3 +=1;
+            }
+    }
 
-    cout <<  " Num of points : "<< confilter->GetOutput()->GetNumberOfPoints() << endl;
+    cout << "count of npts not 3 : " << count_not3 << endl;
+    cout << "count of npts 3 : " << count_3 << endl;
+    //confilter->GetOutput()->GenerateTrianglesOn();
+    cout <<  " Num of triangles : "<< surface->GetOutput()->GetNumberOfStrips() << endl;
+    cout <<  " Num of polys : "<< surface->GetOutput()->GetNumberOfPolys() << endl;
+    //cout <<  " Num of strips : "<< confilter->GetOutput()->GetNumberOfStrips() << endl;
+
+    cout <<  " Num of points : "<< surface->GetOutput()->GetNumberOfPoints() << endl;
 
 
-
+    makeConnectedSurfaces();
     //surface->update();
+}
+
+void VTKSurface::findConnectedVertsRecur(vtkIdType ID)
+{
+    //maybe you should do a malloc?
+    vtkIdType *connectedCells;
+
+    vtkIdType npts; vtkIdType *pts;
+
+    //find cell links and call recursion on them
+    connectedCells = cellLinksFilter->GetCells(ID);
+    int num_of_cells = cellLinksFilter->GetNcells(ID);
+    //vector to perform set operation on
+    set<vtkIdType> all_connected_cells;
+
+    for(int j=0;j<num_of_cells;j++)
+    {
+        polyArray->GetCell(connectedCells[j], npts, pts );
+        all_connected_cells.insert(pts[0]);
+        all_connected_cells.insert(pts[1]);
+        all_connected_cells.insert(pts[2]);
+    }
+
+    std::set<vtkIdType>::iterator it;
+    for (it = all_connected_cells.begin(); it != all_connected_cells.end(); ++it)
+    {
+        vtkIdType vertexID = *it;
+        if (Array[vertexID] == false)
+        {
+            Array[vertexID] = true;
+            findConnectedVertsRecur(vertexID);
+        }
+
+    }
+
+    //call recursion on every pointID in connectedCells
+}
+
+
+void VTKSurface::makeConnectedSurfaces()
+{
+
+    //map-> Array
+
+    for(int i=0;i < surface->GetOutput()->GetNumberOfPoints();i++)
+    {
+        if(Array[i] == false )
+        {
+            Array[i] = true;
+            //call recursion on every pointID in connectedCells
+            cout << "new surface" << endl;
+            findConnectedVertsRecur(i);
+        }
+    }
+
 }
 
 void VTKSurface::render(Window *window)
 {
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(confilter->GetOutputPort());
+    mapper->SetInputConnection(surface->GetOutputPort());
     mapper->ScalarVisibilityOff();
 
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
