@@ -30,6 +30,8 @@ VTKVolume::VTKVolume()
     actor1 = vtkSmartPointer<vtkActor>::New();
     actor2 = vtkSmartPointer<vtkActor>::New();
     actor3 = vtkSmartPointer<vtkActor>::New();
+    colorFun = vtkSmartPointer<vtkColorTransferFunction>::New();
+    opacityFun = vtkSmartPointer<vtkPiecewiseFunction>::New();
 }
 
 /*void VTKVolume::readData(string foldername)
@@ -49,6 +51,11 @@ void VTKVolume::setImageData(ImageData* data) {
     imageData->getImageData()->GetBounds(bounds);
     //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
     cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
+}
+
+void VTKVolume::setLayers(Layer* layers, int n) {
+    this->layers = layers;
+    numberOfLayers = n;
 }
 
 void VTKVolume::createVolume()
@@ -141,10 +148,6 @@ void VTKVolume::render(Window *window)
     //type cast window to VTKWindow
     ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(volumeRenderer);
 
-    // Create transfer functions
-    vtkSmartPointer<vtkColorTransferFunction> colorFun = vtkSmartPointer<vtkColorTransferFunction>::New();
-    vtkSmartPointer<vtkPiecewiseFunction> opacityFun = vtkSmartPointer<vtkPiecewiseFunction>::New();
-
     // Create the property and attach the transfer functions
     vtkSmartPointer<vtkVolumeProperty> property = vtkSmartPointer<vtkVolumeProperty>::New();
     property->ShadeOff();
@@ -157,11 +160,11 @@ void VTKVolume::render(Window *window)
     //-------------------------Transfer Functions-------------------------
     //float red = 0.93; float green = 0.25; float blue = 0.30; float opacity = 1.0;
 
-      float intervalLen = (maxIntensity - minIntensity)/6.0;
-      cout << "Intensity range    " << "Count  " << endl;
-      cout << "--------------------------------" << endl;
+      //float intervalLen = (maxIntensity - minIntensity)/6.0;
+      //cout << "Intensity range    " << "Count  " << endl;
+      //cout << "--------------------------------" << endl;
       //Assigning colors to the volume R,G,B.
-      colorFun->AddRGBPoint( minIntensity, 0.0, 0.0, 0.0 );                   cout << minIntensity << " to " << minIntensity +intervalLen << "        " << Map[0] << endl;
+      /*colorFun->AddRGBPoint( minIntensity, 0.0, 0.0, 0.0 );                   cout << minIntensity << " to " << minIntensity +intervalLen << "        " << Map[0] << endl;
       colorFun->AddRGBPoint( minIntensity+intervalLen, 0.6, 0.6, 0 );       cout << minIntensity+intervalLen << " to " << minIntensity +2*intervalLen << "       " <<Map[1] << endl;
       colorFun->AddRGBPoint( minIntensity+intervalLen*2 ,  0, 0.7, 0.7 );   cout << minIntensity+2*intervalLen << " to " << minIntensity +3*intervalLen<< "      "  <<Map[2] << endl;
       colorFun->AddRGBPoint( minIntensity+intervalLen*3,  0.8, 0.0, 0.0 );    cout << minIntensity+3*intervalLen << " to " << minIntensity +4*intervalLen<< "      "  <<Map[3] << endl;
@@ -182,10 +185,16 @@ void VTKVolume::render(Window *window)
       opacityFun->AddPoint(minIntensity+4*intervalLen, 2*Map[4] / voxel_count );
       opacityFun->AddPoint(minIntensity+5*intervalLen, 2*Map[5] / voxel_count );
       opacityFun->AddPoint(maxIntensity, 0.3 );
-      //opacityFun->AddPoint(80, 0.03 );
+      //opacityFun->AddPoint(80, 0.03 );*/
 
     //-------------------------------------------------------------------
     //setting the lighting for the volume
+
+    for(int i=0; i<numberOfLayers; i++) {
+        colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
+                layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
+    }
+
     property->ShadeOn();
     property->SetAmbient(0.7);
     property->SetDiffuse(0.9);
@@ -227,6 +236,25 @@ void VTKVolume::render(Window *window)
 
     volumeRenderer->SetBackground(.0, .0, .0);
     volumeRenderer->ResetCamera();
+}
+
+void VTKVolume::updateTransferFunctions() {
+    //colorFun->RemoveAllPoints();
+    //opacityFun->RemoveAllPoints();
+    //opacityFun->AddSegment(minIntensity, 0, maxIntensity, 0);
+    for(int i=0; i<numberOfLayers; i++) {
+        if(!layers[i].on) {
+            opacityFun->AddSegment(layers[i].isovalueStart, 0, layers[i].isovalueEnd, 0);
+        }
+    }
+    for(int i=0; i<numberOfLayers; i++) {
+        if(layers[i].on) {
+            colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
+                layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
+            opacityFun->AddSegment(layers[i].isovalueStart, 1, layers[i].isovalueEnd, 1);
+        }
+    }
+    volumeRenderer->GetRenderWindow()->Render();
 }
 
 void VTKVolume::updatePlane(Slice* slice, int type) {

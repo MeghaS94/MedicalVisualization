@@ -52,3 +52,62 @@ void Widget::on_checkSagittal_clicked(bool status) {
     controller->sagittalPlane(status);
 }
 
+void Widget::on_checkBox_1_clicked(bool status) {
+    controller->setLayer(0, status);
+}
+
+void Widget::on_checkBox_2_clicked(bool status) {
+    controller->setLayer(1, status);
+}
+
+void Widget::on_checkBox_3_clicked(bool status) {
+    controller->setLayer(2, status);
+}
+
+void Widget::on_checkBox_4_clicked(bool status) {
+    controller->setLayer(3, status);
+}
+
+void Widget::on_checkBox_5_clicked(bool status) {
+    controller->setLayer(4, status);
+}
+
+void Widget::on_checkBox_6_clicked(bool status) {
+    controller->setLayer(5, status);
+}
+
+void Widget::on_checkBox_7_clicked(bool status) {
+    controller->setLayer(6, status);
+}
+
+void Widget::on_checkBox_8_clicked(bool status) {
+    controller->setLayer(7, status);
+}
+
+void Widget::on_checkBox_9_clicked(bool status) {
+    controller->setLayer(8, status);
+}
+
+void Widget::on_checkBox_10_clicked(bool status) {
+    controller->setLayer(9, status);
+}
+
+void Widget::on_checkBox_11_clicked(bool status) {
+    controller->setLayer(10, status);
+}
+
+void Widget::on_checkBox_12_clicked(bool status) {
+    controller->setLayer(11, status);
+}
+
+void Widget::on_checkBox_13_clicked(bool status) {
+    controller->setLayer(12, status);
+}
+
+void Widget::on_checkBox_14_clicked(bool status) {
+    controller->setLayer(13, status);
+}
+
+void Widget::on_btnShow_clicked() {
+    controller->updateTransferFunctions();
+}

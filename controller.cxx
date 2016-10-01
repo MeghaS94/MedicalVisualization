@@ -7,6 +7,7 @@
 #include "vtkslice.h"
 #include "surface.h"
 #include "vtksurface.h"
+#include <stdlib.h>
 
 Controller::Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2)
 {
@@ -35,9 +36,11 @@ void Controller::initialize()
 {
     imageData->loadData(foldername);
     initializeVOIButtons();
+    readIsovalues();
     //reads and renders volume
     //volume->readData(foldername);
     volume->setImageData(imageData);
+    volume->setLayers(&layers[0], layers.size());
     volume->createVolume();
     volume->makeIntervals();
     volume->render(window1);
@@ -45,17 +48,17 @@ void Controller::initialize()
     //axialSlice->readData(foldername);
     axialSlice->setImageData(imageData);
     axialSlice->createSlice();
-    //axialSlice->render(window2);
+    axialSlice->render(window2);
 
     //coronalSlice->readData(foldername);
     coronalSlice->setImageData(imageData);
     coronalSlice->createSlice();
-    //coronalSlice->render(window3);
+    coronalSlice->render(window3);
 
     //sagittalSlice->readData(foldername);
     sagittalSlice->setImageData(imageData);
     sagittalSlice->createSlice();
-    //sagittalSlice->render(window4);
+    sagittalSlice->render(window4);
 
     updateVolumePlanes();
 
@@ -82,6 +85,22 @@ void Controller::initializeVOIButtons() {
     ui1->zmax->setValue(imageData->getExtent()[5]);
 }
 
+void Controller::readIsovalues() {
+    ifstream infile("../isovalues.txt");
+    string line;
+    char* tokens;
+    float isoStart, isoEnd;
+    while(getline(infile, line)) {
+        tokens = strtok((char *)line.c_str(), ",");
+        string name(tokens);
+        tokens = strtok(NULL, ",");
+        isoStart = atof(tokens);
+        tokens = strtok(NULL, ",");
+        isoEnd = atof(tokens);
+        layers.push_back(Layer(name, isoStart, isoEnd, false));
+    }
+}
+
 void Controller::drawSurface() {
     ui2->min->setText(QString::number(startIsoValue));
     ui2->max->setText(QString::number(endIsoValue));
@@ -93,6 +112,7 @@ void Controller::drawSurface() {
     //surface->createSurface();
     //surface->render(window5);
     surface->setImageData(imageData);
+    surface->setLayers(&layers[0], layers.size());
     surface->createSurface();
     surface->render(window5);
 }
@@ -107,18 +127,18 @@ void Controller::setStartIsoValue(int val) {
     startIsoValue = val;
     ui2->min->setText(QString::number(startIsoValue));
     printf("%d %d\n", startIsoValue, endIsoValue);
-    surface->setIsovalueStart(startIsoValue);
+    //surface->setIsovalueStart(startIsoValue);
     QCoreApplication::processEvents();
-    surface->createSurface();
+    //surface->createSurface();
 }
 
 void Controller::setEndIsoValue(int val) {
     endIsoValue = val;
     ui2->max->setText(QString::number(endIsoValue));
     printf("%d %d\n", startIsoValue, endIsoValue);
-    surface->setIsovalueEnd(endIsoValue);
+    //surface->setIsovalueEnd(endIsoValue);
     QCoreApplication::processEvents();
-    surface->createSurface();
+    //surface->createSurface();
 }
 
 void Controller::extractVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax) {
@@ -141,4 +161,12 @@ void Controller::coronalPlane(bool visibility) {
 
 void Controller::sagittalPlane(bool visibility) {
     volume->sagittalPlane(visibility);
+}
+
+void Controller::setLayer(int i, bool status) {
+    layers[i].on=status;
+}
+
+void Controller::updateTransferFunctions() {
+    volume->updateTransferFunctions();
 }

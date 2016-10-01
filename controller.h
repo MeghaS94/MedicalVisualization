@@ -8,9 +8,11 @@
 #include "volume.h"
 #include "slice.h"
 #include "surface.h"
+#include "layer.h"
 #include "ui_widget.h"
 #include "ui_widget2.h"
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -21,7 +23,8 @@ public:
     void setFolderName(string foldername);
     void initialize();
     void initializeVOIButtons();
-    void drawSurface() ;
+    void readIsovalues();
+    void drawSurface();
     void updateVolumePlanes();
     void setStartIsoValue(int val);
     void setEndIsoValue(int val);
@@ -29,6 +32,8 @@ public:
     void axialPlane(bool visibility);
     void coronalPlane(bool visibility);
     void sagittalPlane(bool visibility);
+    void setLayer(int i, bool status);
+    void updateTransferFunctions();
 
 private:
     Ui::Widget* ui1;
@@ -45,6 +50,7 @@ private:
     Slice* sagittalSlice;
     Surface* surface;
     string foldername;
+    vector <Layer> layers;
     int startIsoValue;
     int endIsoValue;
 };

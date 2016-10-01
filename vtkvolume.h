@@ -13,8 +13,11 @@
 #include <vtkActor.h>
 #include <vtkImageData.h>
 #include <vtkExtractVOI.h>
+#include <vtkColorTransferFunction.h>
+#include <vtkPiecewiseFunction.h>
 
 #include "slice.h"
+#include "layer.h"
 
 using namespace std;
 
@@ -31,15 +34,36 @@ private :
     vtkSmartPointer<vtkActor> actor1;
     vtkSmartPointer<vtkActor> actor2;
     vtkSmartPointer<vtkActor> actor3;
+    vtkSmartPointer<vtkColorTransferFunction> colorFun;
+    vtkSmartPointer<vtkPiecewiseFunction> opacityFun;
     int extent[6];
     double bounds[6];
+    float colours[15][2][3] = {{{0.2,0,0},{1,0,0}},
+                                {{0,0.2,0},{0,1,0}},
+                                {{0,0,0.2},{0,0,1}},
+                                {{0.2,0.2,0},{1,1,0}},
+                                {{0.2,0,0.2},{1,0,1}},
+                                {{0,0.2,0.2},{0,1,1}},
+                                {{1,1,1},{0.5,0.5,0.5}},
+                                {{0.2,0.8,0},{1,0.8,0}},
+                                {{0,0.8,0.2},{0,0.8,1}},
+                                {{0.8,0.2,0},{0.8,1,0}},
+                                {{0.8,0,0.2},{0.8,0,1}},
+                                {{0.2,0,0.8},{1,0,0.8}},
+                                {{0,0.2,0.8},{0,1,0.8}},
+                                {{0.2,0.8,0.8},{1,0.8,0.8}},
+                                {{0.8,0.2,0.8},{0.8,1,0.8}}};
+    Layer* layers;
+    int numberOfLayers;
 
 public:
     VTKVolume();
     void setImageData(ImageData* data);
+    void setLayers(Layer* layers, int n);
     void createVolume();
     void updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax);
     void render(Window *window);
+    void updateTransferFunctions();
     void updatePlane(Slice* slice, int type);    
     void makeIntervals();
     void axialPlane(bool visibility);

@@ -4,6 +4,7 @@
 #include <string>
 #include "window.h"
 #include "imagedata.h"
+#include "layer.h"
 
 using namespace std;
 
@@ -13,6 +14,7 @@ public:
     Surface(double isovalue_s, double isovalue_end);
     virtual void render(Window *window) = 0;
     virtual void setImageData(ImageData* data) = 0;
+    virtual void setLayers(Layer* layers, int n) = 0;
     virtual void createSurface() = 0;
     double getIsovalueStart();
     double getIsovalueEnd();

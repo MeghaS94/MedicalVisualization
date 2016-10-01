@@ -37,8 +37,15 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, floa
     //confilter = vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
     surface->SetNumberOfContours(1);
     red = r; blue = b; green =g;
+    polyArray = vtkSmartPointer<vtkCellArray>::New();
+    cellLinksFilter = vtkSmartPointer<vtkCellLinks>::New();
+    count = 0;
 }
 
+void VTKSurface::setLayers(Layer* layers, int n) {
+    this->layers = layers;
+    numberOfLayers = n;
+}
 /*void VTKSurface::readData(string foldername)
 {
     reader->SetDirectoryName(foldername.c_str());
@@ -62,10 +69,17 @@ void VTKSurface::createSurface()
                 //float* pixel1 = static_cast<float*>(modifiedData->GetScalarPointer(x,y,z));
                 float pixel2 =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
                 //cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
-                if(pixel2>=isovalue_start && pixel2<=isovalue_end)
+                /*if(pixel2>=isovalue_start && pixel2<=isovalue_end)
                     modifiedData->SetScalarComponentFromFloat(x,y,z,0,1.0);
                 else
-                    modifiedData->SetScalarComponentFromFloat(x,y,z,0,0.0);
+                    modifiedData->SetScalarComponentFromFloat(x,y,z,0,0.0);*/
+                modifiedData->SetScalarComponentFromFloat(x,y,z,0,0.0);
+                for(int i=0; i<numberOfLayers; i++) {
+                    if(layers[i].on && pixel2>=layers[i].isovalueStart && pixel2<=layers[i].isovalueEnd) {
+                        modifiedData->SetScalarComponentFromFloat(x,y,z,0,1.0);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -79,6 +93,120 @@ void VTKSurface::createSurface()
     //confilter->SetExtractionModeToLargestRegion();
     //confilter->Update();
 
+}
+
+void VTKSurface::findConnectedVertsRecur(vtkIdType ID)
+{
+    //maybe you should do a malloc?
+    cout << "ID " << ID << endl;
+    //cout << "HERE1" << endl;
+    int num_of_cells = cellLinksFilter->GetNcells(ID);
+    //cout << num_of_cells << endl;
+    //cout << "HERE2" << endl;
+    vtkIdType *connectedCells;
+    vtkIdType npts; vtkIdType *pts;
+    //find cell links and call recursion on them
+    connectedCells = cellLinksFilter->GetCells(ID);
+    //vector to perform set operation on
+    //cout << "HERE3" << endl;
+    set<vtkIdType> all_connected_cells;
+    for(int j=0;j<num_of_cells;j++)
+    {
+        polyArray->GetCell(connectedCells[j]*4, npts, pts );
+        all_connected_cells.insert(pts[0]);
+        //cout << "POINT " << pts[0] << endl;
+        //cout << "POINT " << pts[1] << endl;
+        //cout << "POINT " << pts[2] << endl;
+        all_connected_cells.insert(pts[1]);
+        all_connected_cells.insert(pts[2]);
+    }
+    //cout << "HERE4" << endl;
+    //cout << all_connected_cells.size() << endl;
+    std::set<vtkIdType>::iterator it;
+    for (it = all_connected_cells.begin(); it != all_connected_cells.end(); ++it)
+    {
+        vtkIdType vertexID = *it;
+        cout << "vertex " << vertexID << endl;
+    }
+    for (it = all_connected_cells.begin(); it != all_connected_cells.end(); ++it)
+    {
+        vtkIdType vertexID = *it;
+        //cout << "vertex " << vertexID << endl;
+        if (Array[vertexID] == false)
+        {
+            Array[vertexID] = true;
+            count++;
+            cout << count << endl;
+            findConnectedVertsRecur(vertexID);
+        }
+
+    }
+
+    //call recursion on every pointID in connectedCells
+}
+
+
+void VTKSurface::makeConnectedSurfaces()
+{
+
+    //map-> Array
+    cellLinksFilter->Allocate(surface->GetOutput()->GetNumberOfPoints());
+    cellLinksFilter->BuildLinks(surface->GetOutput(), polyArray);
+    for(int i=0;i < surface->GetOutput()->GetNumberOfPoints();i++)
+    {
+        if(Array[i] == false )
+        {
+            Array[i] = true;
+            count++;
+            cout << count << endl;
+            //call recursion on every pointID in connectedCells
+            cout << "new surface" << endl;
+            findConnectedVertsRecur(i);
+        }
+    }
+
+}
+
+void VTKSurface::makeConnectedSurfaces2()
+{
+    vtkIdType numCells = polyArray->GetNumberOfCells();
+    set<vtkIdType> allPoints;
+    vtkIdType cellLocation = 0; // the index into the cell array
+    for (vtkIdType i = 0; i < numCells; i++) {
+         vtkIdType numIds; // to hold the size of the cell
+         vtkIdType *pointIds; // to hold the ids in the cell
+
+         polyArray->GetCell(cellLocation, numIds, pointIds);
+         cellLocation += 1 + numIds;
+         allPoints.insert(pointIds[0]);
+         allPoints.insert(pointIds[1]);
+         allPoints.insert(pointIds[2]);
+    }
+    std::set<vtkIdType>::iterator it;
+    for (it = allPoints.begin(); it != allPoints.end(); ++it)
+    {
+        vtkIdType vertexID = *it;
+        cout << "vertex " << vertexID << endl;
+    }
+}
+
+void VTKSurface::render(Window *window)
+{
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(surface->GetOutputPort());
+    mapper->ScalarVisibilityOff();
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    //actor.SetNumberOfCloudPoints( 1000000 );
+    actor->SetMapper(mapper);
+    actor->GetProperty()->SetColor(red, blue, green);
+    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+    //renderer->SetBackground(.1, .2, .3);
+    renderer->AddActor(actor);
+
+    ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(renderer);
+    renderer->SetBackground(.0, .0, .0);
+    renderer->ResetCamera();
 
     polyArray = surface->GetOutput()->GetPolys();
     polyArray->InitTraversal();
@@ -111,81 +239,6 @@ void VTKSurface::createSurface()
 
     makeConnectedSurfaces();
     //surface->update();
-}
-
-void VTKSurface::findConnectedVertsRecur(vtkIdType ID)
-{
-    //maybe you should do a malloc?
-    int num_of_cells = cellLinksFilter->GetNcells(ID);
-    vtkIdType *connectedCells = (vtkIdType*)malloc((num_of_cells)*sizeof(vtkIdType));
-
-    vtkIdType npts; vtkIdType *pts;
-
-    //find cell links and call recursion on them
-    connectedCells = cellLinksFilter->GetCells(ID);
-
-    //vector to perform set operation on
-    set<vtkIdType> all_connected_cells;
-
-    for(int j=0;j<num_of_cells;j++)
-    {
-        polyArray->GetCell(connectedCells[j], npts, pts );
-        all_connected_cells.insert(pts[0]);
-        all_connected_cells.insert(pts[1]);
-        all_connected_cells.insert(pts[2]);
-    }
-
-    std::set<vtkIdType>::iterator it;
-    for (it = all_connected_cells.begin(); it != all_connected_cells.end(); ++it)
-    {
-        vtkIdType vertexID = *it;
-        if (Array[vertexID] == false)
-        {
-            Array[vertexID] = true;
-            findConnectedVertsRecur(vertexID);
-        }
-
-    }
-
-    //call recursion on every pointID in connectedCells
-}
-
-
-void VTKSurface::makeConnectedSurfaces()
-{
-
-    //map-> Array
-
-    for(int i=0;i < surface->GetOutput()->GetNumberOfPoints();i++)
-    {
-        if(Array[i] == false )
-        {
-            Array[i] = true;
-            //call recursion on every pointID in connectedCells
-            cout << "new surface" << endl;
-            findConnectedVertsRecur(i);
-        }
-    }
-
-}
-
-void VTKSurface::render(Window *window)
-{
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(surface->GetOutputPort());
-    mapper->ScalarVisibilityOff();
-
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    //actor.SetNumberOfCloudPoints( 1000000 );
-    actor->SetMapper(mapper);
-    actor->GetProperty()->SetColor(red, blue, green);
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    //renderer->SetBackground(.1, .2, .3);
-    renderer->AddActor(actor);
-
-    ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(renderer);
-    renderer->SetBackground(.0, .0, .0);
-    renderer->ResetCamera();
 }
 
 

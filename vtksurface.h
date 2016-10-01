@@ -33,15 +33,19 @@ private :
     double bounds[6];
     map <vtkIdType, bool> Array;
     vtkSmartPointer<vtkCellLinks> cellLinksFilter;
-
+    Layer* layers;
+    int count;
+    int numberOfLayers;
 
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
     VTKSurface(double isovalue_start, double isovalue_end, float r, float g, float b);
     void setImageData(ImageData* data);
+    void setLayers(Layer* layers, int n);
     void render(Window *window);
     void createSurface();
     void makeConnectedSurfaces();
+    void makeConnectedSurfaces2();
     void findConnectedVertsRecur(vtkIdType ID);
     //double getIsovalue();
 
