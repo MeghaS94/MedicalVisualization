@@ -22,12 +22,22 @@ void Widget2::setController(Controller* c) {
     controller = c;
 }
 
-void Widget2::minIsoValueChanged(int val) {
-    controller->setStartIsoValue(val);
-    controller->drawSurface();
+void Widget2::on_btnPrevious_clicked() {
+    controller->updateSurface(-1);
 }
 
-void Widget2::maxIsoValueChanged(int val) {
-    controller->setEndIsoValue(val);
-    controller->drawSurface();
+void Widget2::on_btnNext_clicked() {
+    controller->updateSurface(1);
+}
+
+void Widget2::on_radioBtnComplete_clicked() {
+    controller->updateSurface(0);
+}
+
+void Widget2::on_radioBtnComponent_clicked() {
+    controller->updateSurface(2);
+}
+
+void Widget2::on_threshold_valueChanged(int val) {
+    controller->updateThreshold(val);
 }

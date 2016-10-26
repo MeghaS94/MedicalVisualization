@@ -1,3 +1,4 @@
+
 #include <vtkActor.h>
 #include <vtkMarchingContourFilter.h>
 #include <vtkPolyDataMapper.h>
@@ -9,8 +10,11 @@
 #include <vtkPolyDataConnectivityFilter.h>
 #include <vtkPolyData.h>
 #include <vtkCellArray.h>
-//#include <vtkIdType.h>
 #include <vtkCellLinks.h>
+#include <vtkFillHolesFilter.h>
+#include <vtkPolyDataNormals.h>
+#include <vtkPointData.h>
+#include <vtkPolyData.h>
 #include "vtksurface.h"
 #include "window.h"
 #include "vtkwindow.h"
@@ -26,6 +30,7 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end) : Surface(iso
     surface->SetNumberOfContours(1);
     polyArray = vtkSmartPointer<vtkCellArray>::New();
     cellLinksFilter = vtkSmartPointer<vtkCellLinks>::New();
+
 }
 
 VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, float g, float b) : Surface(isoValue_start, isoValue_end)
@@ -38,8 +43,25 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, floa
     surface->SetNumberOfContours(1);
     red = r; blue = b; green =g;
     polyArray = vtkSmartPointer<vtkCellArray>::New();
+    surfacePolygons = vtkSmartPointer<vtkPolyData>::New();
+    wholeSurfacePolygons = vtkSmartPointer<vtkPolyData>::New();
     cellLinksFilter = vtkSmartPointer<vtkCellLinks>::New();
+    renderer = vtkSmartPointer<vtkRenderer>::New();
     count = 0;
+    current_surface = 0;
+    whole = true;
+    threshold = 5000;
+    data[0] = vtkSmartPointer<vtkPolyData>::New();
+    data[1] = vtkSmartPointer<vtkPolyData>::New();
+    celldata[0] = vtkSmartPointer<vtkCellArray>::New();
+    celldata[1] = vtkSmartPointer<vtkCellArray>::New();
+    small=0;
+    big=0;
+    actor = vtkSmartPointer<vtkActor>::New();
+    actor1 = vtkSmartPointer<vtkActor>::New();
+    actor2 = vtkSmartPointer<vtkActor>::New();
+    mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
 }
 
 void VTKSurface::setLayers(Layer* layers, int n) {
@@ -84,10 +106,10 @@ void VTKSurface::createSurface()
         }
     }
 
-    surface->SetInputData(modifiedData);
     surface->ComputeNormalsOn();
-    surface->SetValue(0, 0.5);
     surface->GenerateTrianglesOn();
+    surface->SetInputData(modifiedData);
+    surface->SetValue(0, 0.5);
 
     //confilter->SetInputConnection(surface->GetOutputPort());
     //confilter->SetExtractionModeToLargestRegion();
@@ -95,56 +117,44 @@ void VTKSurface::createSurface()
 
 }
 
-void VTKSurface::findConnectedVertsRecur(vtkIdType ID)
+long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
 {
-    //maybe you should do a malloc?
-    cout << "ID " << ID << endl;
-    //cout << "HERE1" << endl;
-    int num_of_cells = cellLinksFilter->GetNcells(ID);
-    //cout << num_of_cells << endl;
-    //cout << "HERE2" << endl;
-    vtkIdType *connectedCells;
-    vtkIdType npts; vtkIdType *pts;
-    //find cell links and call recursion on them
-    connectedCells = cellLinksFilter->GetCells(ID);
-    //vector to perform set operation on
-    //cout << "HERE3" << endl;
-    set<vtkIdType> all_connected_cells;
-    for(int j=0;j<num_of_cells;j++)
-    {
-        polyArray->GetCell(connectedCells[j]*4, npts, pts );
-        all_connected_cells.insert(pts[0]);
-        //cout << "POINT " << pts[0] << endl;
-        //cout << "POINT " << pts[1] << endl;
-        //cout << "POINT " << pts[2] << endl;
-        all_connected_cells.insert(pts[1]);
-        all_connected_cells.insert(pts[2]);
-    }
-    //cout << "HERE4" << endl;
-    //cout << all_connected_cells.size() << endl;
-    std::set<vtkIdType>::iterator it;
-    for (it = all_connected_cells.begin(); it != all_connected_cells.end(); ++it)
-    {
-        vtkIdType vertexID = *it;
-        cout << "vertex " << vertexID << endl;
-    }
-    for (it = all_connected_cells.begin(); it != all_connected_cells.end(); ++it)
-    {
-        vtkIdType vertexID = *it;
-        //cout << "vertex " << vertexID << endl;
-        if (Array[vertexID] == false)
+    vector <vtkIdType> all_connected_cells;
+    all_connected_cells.push_back(ID);
+    int i=0;
+    while(i<all_connected_cells.size()) {
+        //cout << all_connected_cells[i] << endl;
+        int num_of_cells = cellLinksFilter->GetNcells(all_connected_cells[i]);
+        vtkIdType *connectedCells;
+        vtkIdType npts; vtkIdType *pts;
+        //find cell links and call recursion on them
+        connectedCells = cellLinksFilter->GetCells(all_connected_cells[i]);
+        //surface->GetOutput()->GetPointCells(all_connected_cells[i], num_of_cells, connectedCells );
+        for(int j=0;j<num_of_cells;j++)
         {
-            Array[vertexID] = true;
-            count++;
-            cout << count << endl;
-            findConnectedVertsRecur(vertexID);
+            surface->GetOutput()->GetCellPoints(connectedCells[j], npts, pts );
+            //surface->GetOutput()->GetCellPoints(connectedCells[j], npts, pts );
+            //if(!Array2[connectedCells[j]]) {
+                subsurfaces.push_back(pts);
+            //    Array2[connectedCells[j]]=true;
+            //}
+            if(!Array[pts[0]]) {
+                Array[pts[0]]=true;
+                all_connected_cells.push_back(pts[0]);
+            }
+            if(!Array[pts[1]]) {
+                Array[pts[1]]=true;
+                all_connected_cells.push_back(pts[1]);
+            }
+            if(!Array[pts[2]]) {
+                Array[pts[2]]=true;
+                all_connected_cells.push_back(pts[2]);
+            }
         }
-
+        i++;
     }
-
-    //call recursion on every pointID in connectedCells
+    return all_connected_cells.size();
 }
-
 
 void VTKSurface::makeConnectedSurfaces()
 {
@@ -157,59 +167,163 @@ void VTKSurface::makeConnectedSurfaces()
         if(Array[i] == false )
         {
             Array[i] = true;
-            count++;
-            cout << count << endl;
             //call recursion on every pointID in connectedCells
-            cout << "new surface" << endl;
-            findConnectedVertsRecur(i);
+            subsurfaces.clear();
+            long c = findConnectedVertsRecur(i);
+            createConnectedSurfaces();
+        }
+    }
+}
+
+void VTKSurface::showCompleteSurface() {
+    whole = true;
+    surfacePolygons->SetPolys(polyArray);
+    surface->Update();
+    actor1->GetProperty()->SetOpacity(1.0);
+    actor2->GetProperty()->SetOpacity(1.0);
+    actor->VisibilityOff();
+    renderer->GetRenderWindow()->Render();
+}
+
+void VTKSurface::showComponentSurface() {
+    whole = false;
+    surfacePolygons->SetPolys(connectedComponents[current_surface]);
+    surface->Update();
+    if(surface->GetOutput()->GetPolys()->GetNumberOfCells()>threshold)
+        actor->GetProperty()->SetColor(red, blue, green);
+    else
+        actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
+    actor1->GetProperty()->SetOpacity(0.1);
+    actor2->GetProperty()->SetOpacity(0.1);
+    actor->VisibilityOn();
+    renderer->GetRenderWindow()->Render();
+}
+
+void VTKSurface::showNextSurface() {
+    current_surface += 1;
+    if(current_surface>=connectedComponents.size())
+        current_surface = 0;
+}
+
+void VTKSurface::showPreviousSurface() {
+    current_surface -= 1;
+    if(current_surface<0)
+        current_surface = connectedComponents.size()-1;
+}
+
+int VTKSurface::getCurrentSurface() {
+    return current_surface+1;
+}
+
+long VTKSurface::getMinimum() {
+    long mini = 10000000;
+    for(int i=0; i<connectedComponents.size(); i++) {
+        if(connectedComponents[i]->GetNumberOfCells()<mini)
+            mini=connectedComponents[i]->GetNumberOfCells();
+    }
+    return mini;
+}
+
+long VTKSurface::getMaximum() {
+    long maxi = 0;
+    for(int i=0; i<connectedComponents.size(); i++) {
+        if(connectedComponents[i]->GetNumberOfCells()>maxi)
+            maxi=connectedComponents[i]->GetNumberOfCells();
+    }
+    return maxi;
+}
+
+void VTKSurface::updateThreshold(int val) {
+    threshold = val;
+    vtkIdType npts; vtkIdType *pts;
+    big=0;
+    small=0;
+    cout << "here1 " << val << " " << threshold << endl;
+    for(int i=0; i<connectedComponents.size(); i++) {
+        if(connectedComponents[i]->GetNumberOfCells()>threshold)
+            big+=connectedComponents[i]->GetNumberOfCells();
+        else
+            small+=connectedComponents[i]->GetNumberOfCells();
+    }
+
+    cout << big << endl;
+    cout << small << endl;
+
+    celldata[0]->Allocate(celldata[0]->EstimateSize(big, 3));
+    celldata[1]->Allocate(celldata[1]->EstimateSize(small, 3));
+
+    //cout << connectedComponents.size() << endl;
+    //vtkIdType npts; vtkIdType *pts;
+    for(int i=0; i<connectedComponents.size(); i++) {
+        if(connectedComponents[i]->GetNumberOfCells()>threshold) {
+            while(connectedComponents[i]->GetNextCell(npts, pts))
+                celldata[0]->InsertNextCell(npts, pts);
+        }
+        else {
+            while(connectedComponents[i]->GetNextCell(npts, pts))
+                celldata[1]->InsertNextCell(npts, pts);
         }
     }
 
+    cout << celldata[0]->GetNumberOfCells() << endl;
+    cout << celldata[1]->GetNumberOfCells() << endl;
+
+    data[0]->SetPolys(celldata[0]);
+    data[1]->SetPolys(celldata[1]);
+    mapper1->SetInputData(data[0]);
+    mapper2->SetInputData(data[1]);
+    renderer->GetRenderWindow()->Render();
 }
 
-void VTKSurface::makeConnectedSurfaces2()
-{
-    vtkIdType numCells = polyArray->GetNumberOfCells();
-    set<vtkIdType> allPoints;
-    vtkIdType cellLocation = 0; // the index into the cell array
-    for (vtkIdType i = 0; i < numCells; i++) {
-         vtkIdType numIds; // to hold the size of the cell
-         vtkIdType *pointIds; // to hold the ids in the cell
+long VTKSurface::getNumberOfTriangles(bool status) {
+    if(status)
+        return polyArray->GetNumberOfCells();
+    else
+        return connectedComponents[current_surface]->GetNumberOfCells();
+}
 
-         polyArray->GetCell(cellLocation, numIds, pointIds);
-         cellLocation += 1 + numIds;
-         allPoints.insert(pointIds[0]);
-         allPoints.insert(pointIds[1]);
-         allPoints.insert(pointIds[2]);
-    }
-    std::set<vtkIdType>::iterator it;
-    for (it = allPoints.begin(); it != allPoints.end(); ++it)
+void VTKSurface::createConnectedSurfaces()
+{
+    vtkSmartPointer<vtkCellArray> temp = vtkSmartPointer<vtkCellArray>::New();
+    vtkIdType s = temp->EstimateSize(subsurfaces.size(), 3);
+    temp->Allocate(s);
+    for(int i=0;i < subsurfaces.size();i++)
     {
-        vtkIdType vertexID = *it;
-        cout << "vertex " << vertexID << endl;
+        temp->InsertNextCell(3, subsurfaces[i]);
     }
+    connectedComponents.push_back(temp);
+    if(temp->GetNumberOfCells()>threshold)
+        big += temp->GetNumberOfCells();
+    else
+        small += temp->GetNumberOfCells();
 }
 
 void VTKSurface::render(Window *window)
 {
+    ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(renderer);
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputConnection(surface->GetOutputPort());
     mapper->ScalarVisibilityOff();
 
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     //actor.SetNumberOfCloudPoints( 1000000 );
     actor->SetMapper(mapper);
-    actor->GetProperty()->SetColor(red, blue, green);
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+    //vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
     //renderer->SetBackground(.1, .2, .3);
-    renderer->AddActor(actor);
 
-    ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(renderer);
+    renderer->AddActor(actor);
+    cout << "here2" << endl;
+
     renderer->SetBackground(.0, .0, .0);
     renderer->ResetCamera();
 
-    polyArray = surface->GetOutput()->GetPolys();
+    polyArray->DeepCopy(surface->GetOutput()->GetPolys());
     polyArray->InitTraversal();
+
+    surface->GetOutput()->BuildCells();
+    surface->GetOutput()->BuildLinks();
+
+    surfacePolygons = surface->GetOutput();
+    wholeSurfacePolygons->DeepCopy(surface->GetOutput());
 
     vtkIdType npts; vtkIdType *pts;
 
@@ -217,14 +331,12 @@ void VTKSurface::render(Window *window)
     int count_3 =0;
     while(polyArray->GetNextCell(npts, pts))
     {
-       if(npts != 3)
-            {
+        if(npts != 3) {
            count_not3 +=1;
-                }
-        else if (npts == 3)
-            {
+        }
+        else if (npts == 3) {
             count_3 +=1;
-            }
+        }
     }
 
     cout << "count of npts not 3 : " << count_not3 << endl;
@@ -236,9 +348,43 @@ void VTKSurface::render(Window *window)
 
     cout <<  " Num of points : "<< surface->GetOutput()->GetNumberOfPoints() << endl;
 
-
     makeConnectedSurfaces();
     //surface->update();
+    actor->VisibilityOff();
+
+    celldata[0]->Allocate(celldata[0]->EstimateSize(big, 3));
+    celldata[1]->Allocate(celldata[1]->EstimateSize(small, 3));
+
+    cout << connectedComponents.size() << endl;
+    //vtkIdType npts; vtkIdType *pts;
+    for(int i=0; i<connectedComponents.size(); i++) {
+        if(connectedComponents[i]->GetNumberOfCells()>threshold) {
+            while(connectedComponents[i]->GetNextCell(npts, pts))
+                celldata[0]->InsertNextCell(npts, pts);
+        }
+        else {
+            while(connectedComponents[i]->GetNextCell(npts, pts))
+                celldata[1]->InsertNextCell(npts, pts);
+        }
+    }
+    cout << celldata[0]->GetNumberOfCells() << endl;
+    cout << celldata[1]->GetNumberOfCells() << endl;
+    data[0]->DeepCopy(wholeSurfacePolygons);
+    data[1]->DeepCopy(wholeSurfacePolygons);
+    data[0]->SetPolys(celldata[0]);
+    data[1]->SetPolys(celldata[1]);
+    mapper1->SetInputData(data[0]);
+    mapper1->ScalarVisibilityOff();
+    actor1->SetMapper(mapper1);
+    actor1->GetProperty()->SetColor(red, blue, green);
+    actor1->GetProperty()->SetOpacity(1.0);
+    mapper2->SetInputData(data[1]);
+    mapper2->ScalarVisibilityOff();
+    actor2->SetMapper(mapper2);
+    actor2->GetProperty()->SetColor(1.0, 0.0, 0.0);
+    actor2->GetProperty()->SetOpacity(1.0);
+    renderer->AddActor(actor1);
+    renderer->AddActor(actor2);
 }
 
 

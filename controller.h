@@ -34,6 +34,8 @@ public:
     void sagittalPlane(bool visibility);
     void setLayer(int i, bool status);
     void updateTransferFunctions();
+    void updateSurface(int i);
+    void updateThreshold(int val);
 
 private:
     Ui::Widget* ui1;
@@ -51,8 +53,7 @@ private:
     Surface* surface;
     string foldername;
     vector <Layer> layers;
-    int startIsoValue;
-    int endIsoValue;
+    bool status;
 };
 
 #endif // CONTROLLER_H

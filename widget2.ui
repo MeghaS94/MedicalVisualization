@@ -31,112 +31,190 @@
     </item>
    </layout>
   </widget>
-  <widget class="QSlider" name="horizontalSlider">
+  <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>900</x>
-     <y>70</y>
-     <width>271</width>
-     <height>22</height>
+     <x>940</x>
+     <y>40</y>
+     <width>181</width>
+     <height>80</height>
     </rect>
    </property>
-   <property name="autoFillBackground">
-    <bool>true</bool>
+   <property name="title">
+    <string>Display</string>
    </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="tickPosition">
-    <enum>QSlider::NoTicks</enum>
-   </property>
-   <property name="tickInterval">
-    <number>50</number>
-   </property>
+   <widget class="QRadioButton" name="radioBtnComplete">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Complete Surface</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioBtnComponent">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connected Component</string>
+    </property>
+   </widget>
   </widget>
-  <widget class="QSlider" name="horizontalSlider_2">
+  <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>900</x>
-     <y>130</y>
-     <width>271</width>
-     <height>22</height>
+     <x>920</x>
+     <y>300</y>
+     <width>241</width>
+     <height>121</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <kerning>false</kerning>
-    </font>
+   <property name="title">
+    <string>Connected Component</string>
    </property>
-   <property name="autoFillBackground">
-    <bool>true</bool>
-   </property>
-   <property name="value">
-    <number>0</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="tickPosition">
-    <enum>QSlider::NoTicks</enum>
-   </property>
-   <property name="tickInterval">
-    <number>50</number>
-   </property>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>60</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Surface:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>50</y>
+      <width>131</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Number of Triangles:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnPrevious">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>113</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Previous</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnNext">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>80</y>
+      <width>113</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Next</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="number">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>50</y>
+      <width>71</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="surface">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>26</y>
+      <width>151</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
-  <widget class="QLabel" name="min">
+  <widget class="QGroupBox" name="groupBox_3">
    <property name="geometry">
     <rect>
-     <x>1120</x>
-     <y>50</y>
-     <width>59</width>
-     <height>16</height>
+     <x>920</x>
+     <y>140</y>
+     <width>241</width>
+     <height>131</height>
     </rect>
    </property>
-   <property name="text">
-    <string/>
+   <property name="title">
+    <string>Complete Surface</string>
    </property>
-  </widget>
-  <widget class="QLabel" name="max">
-   <property name="geometry">
-    <rect>
-     <x>1120</x>
-     <y>110</y>
-     <width>59</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="autoFillBackground">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>900</x>
-     <y>50</y>
-     <width>121</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Isovalue Start</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>900</x>
-     <y>110</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Isovalue End</string>
-   </property>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>131</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Threshold for small component removal (red in colour)</string>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="threshold">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>40</y>
+      <width>71</width>
+      <height>24</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnRemove">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>90</y>
+      <width>113</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Remove</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>
@@ -148,40 +226,7 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>horizontalSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>Widget2</receiver>
-   <slot>minIsoValueChanged(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>911</x>
-     <y>82</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>877</x>
-     <y>77</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_2</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>Widget2</receiver>
-   <slot>maxIsoValueChanged(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>907</x>
-     <y>138</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>872</x>
-     <y>137</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>minIsoValueChanged(int)</slot>
   <slot>maxIsoValueChanged(int)</slot>

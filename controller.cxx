@@ -7,7 +7,10 @@
 #include "vtkslice.h"
 #include "surface.h"
 #include "vtksurface.h"
+#include <string>
 #include <stdlib.h>
+
+using namespace std;
 
 Controller::Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2)
 {
@@ -23,9 +26,8 @@ Controller::Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2)
     axialSlice = new VTKSlice(1, this);
     coronalSlice = new VTKSlice(2, this);
     sagittalSlice = new VTKSlice(3, this);
-    startIsoValue = 0;
-    endIsoValue = 100;
-    surface = new VTKSurface(startIsoValue,endIsoValue,1,1,1);
+    surface = new VTKSurface(0,0,1,1,1);
+    status = true;
 }
 
 void Controller::setFolderName(string foldername) {
@@ -102,43 +104,66 @@ void Controller::readIsovalues() {
 }
 
 void Controller::drawSurface() {
-    ui2->min->setText(QString::number(startIsoValue));
-    ui2->max->setText(QString::number(endIsoValue));
-    ui2->horizontalSlider->setMaximum((int) volume->getMaxIntensity());
-    ui2->horizontalSlider_2->setMaximum((int) volume->getMaxIntensity());
-    ui2->horizontalSlider->setMinimum((int) volume->getMinIntensity());
-    ui2->horizontalSlider_2->setMinimum((int) volume->getMinIntensity());
+    //ui2->min->setText(QString::number(startIsoValue));
+    //ui2->max->setText(QString::number(endIsoValue));
+    //ui2->horizontalSlider->setMaximum((int) volume->getMaxIntensity());
+    //ui2->horizontalSlider_2->setMaximum((int) volume->getMaxIntensity());
+    //ui2->horizontalSlider->setMinimum((int) volume->getMinIntensity());
+    //ui2->horizontalSlider_2->setMinimum((int) volume->getMinIntensity());
     //surface->readData(foldername);
     //surface->createSurface();
     //surface->render(window5);
+    ui2->surface->setText("Complete Surface");
+    ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
     surface->setImageData(imageData);
     surface->setLayers(&layers[0], layers.size());
     surface->createSurface();
     surface->render(window5);
+    ui2->threshold->setMinimum(surface->getMinimum());
+    ui2->threshold->setMaximum(surface->getMaximum());
+    ui2->threshold->setValue(5000);
+}
+
+void Controller::updateSurface(int i) {
+    string s = "Connected Surface "+to_string(surface->getCurrentSurface());
+    if(i==0) {
+        surface->showCompleteSurface();
+        status = true;
+        ui2->surface->setText("Complete Surface");
+        ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
+    }
+    else if(i==1) {
+        surface->showNextSurface();
+        if(!status) {
+            surface->showComponentSurface();
+            ui2->surface->setText(s.c_str());
+            ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
+        }
+    }
+    else if(i==2) {
+        surface->showComponentSurface();
+        status = false;
+        ui2->surface->setText(s.c_str());
+        ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
+    }
+    else {
+        surface->showPreviousSurface();
+        if(!status) {
+            surface->showComponentSurface();
+            ui2->surface->setText(s.c_str());
+            ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
+        }
+    }
+}
+
+void Controller::updateThreshold(int val) {
+    //surface->updateThreshold(val);
 }
 
 void Controller::updateVolumePlanes() {
     volume->updatePlane(axialSlice, 1);
     volume->updatePlane(coronalSlice, 2);
     volume->updatePlane(sagittalSlice,3);
-}
-
-void Controller::setStartIsoValue(int val) {
-    startIsoValue = val;
-    ui2->min->setText(QString::number(startIsoValue));
-    printf("%d %d\n", startIsoValue, endIsoValue);
-    //surface->setIsovalueStart(startIsoValue);
-    QCoreApplication::processEvents();
-    //surface->createSurface();
-}
-
-void Controller::setEndIsoValue(int val) {
-    endIsoValue = val;
-    ui2->max->setText(QString::number(endIsoValue));
-    printf("%d %d\n", startIsoValue, endIsoValue);
-    //surface->setIsovalueEnd(endIsoValue);
-    QCoreApplication::processEvents();
-    //surface->createSurface();
 }
 
 void Controller::extractVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax) {

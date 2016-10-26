@@ -12,6 +12,9 @@
 #include <vtkDICOMImageReader.h>
 #include <vtkPolyDataConnectivityFilter.h>
 #include <vtkCellArray.h>
+#include <vtkPolyDataNormals.h>
+#include <vtkRenderer.h>
+#include <vtkPolyDataMapper.h>
 #include <map>
 #include <set>
 
@@ -32,10 +35,27 @@ private :
     int extent[6];
     double bounds[6];
     map <vtkIdType, bool> Array;
+    map <vtkIdType, bool> Array2;
     vtkSmartPointer<vtkCellLinks> cellLinksFilter;
+    vtkSmartPointer<vtkPolyData> surfacePolygons;
+    vtkSmartPointer<vtkPolyData> wholeSurfacePolygons;
+    vtkSmartPointer<vtkRenderer> renderer;
+    vector<vtkIdType*> subsurfaces;
     Layer* layers;
     int count;
     int numberOfLayers;
+    int current_surface;
+    bool whole;
+    int threshold;
+    vtkSmartPointer<vtkCellArray> celldata[2];
+    vtkSmartPointer<vtkPolyData> data[2];
+    long long small;
+    long long big;
+    vtkSmartPointer<vtkActor> actor;
+    vtkSmartPointer<vtkActor> actor1;
+    vtkSmartPointer<vtkActor> actor2;
+    vtkSmartPointer<vtkPolyDataMapper> mapper1;
+    vtkSmartPointer<vtkPolyDataMapper> mapper2;
 
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
@@ -45,9 +65,17 @@ public:
     void render(Window *window);
     void createSurface();
     void makeConnectedSurfaces();
-    void makeConnectedSurfaces2();
-    void findConnectedVertsRecur(vtkIdType ID);
-    //double getIsovalue();
+    long findConnectedVertsRecur(vtkIdType ID);
+    void createConnectedSurfaces();    
+    void showCompleteSurface();
+    void showComponentSurface();
+    void showNextSurface();
+    void showPreviousSurface();
+    long getMinimum();
+    long getMaximum();
+    void updateThreshold(int val);
+    int getCurrentSurface();
+    long getNumberOfTriangles(bool status);
 
 };
 

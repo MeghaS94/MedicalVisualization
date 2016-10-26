@@ -27,8 +27,11 @@ private:
     Controller* controller;
 
 private slots:
-    void minIsoValueChanged(int val);
-    void maxIsoValueChanged(int val);
+    void on_btnPrevious_clicked();
+    void on_btnNext_clicked();
+    void on_radioBtnComplete_clicked();
+    void on_radioBtnComponent_clicked();
+    void on_threshold_valueChanged(int val);
 };
 
 #endif // WIDGET2_H
