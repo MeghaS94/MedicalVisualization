@@ -7,8 +7,8 @@
 #include "vtkslice.h"
 #include "surface.h"
 #include "vtksurface.h"
-#include <string>
 #include <stdlib.h>
+#include <string>
 
 using namespace std;
 
@@ -125,7 +125,9 @@ void Controller::drawSurface() {
 }
 
 void Controller::updateSurface(int i) {
-    string s = "Connected Surface "+to_string(surface->getCurrentSurface());
+    QString Number;
+    Number.setNum(surface->getCurrentSurface());
+    QString s = "Connected Surface "+ Number;
     if(i==0) {
         surface->showCompleteSurface();
         status = true;
@@ -136,21 +138,21 @@ void Controller::updateSurface(int i) {
         surface->showNextSurface();
         if(!status) {
             surface->showComponentSurface();
-            ui2->surface->setText(s.c_str());
+            ui2->surface->setText(s);
             ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
         }
     }
     else if(i==2) {
         surface->showComponentSurface();
         status = false;
-        ui2->surface->setText(s.c_str());
+        ui2->surface->setText(s);
         ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
     }
     else {
         surface->showPreviousSurface();
         if(!status) {
             surface->showComponentSurface();
-            ui2->surface->setText(s.c_str());
+            ui2->surface->setText(s);
             ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
         }
     }

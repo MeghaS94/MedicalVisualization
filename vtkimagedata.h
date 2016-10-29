@@ -2,7 +2,7 @@
 #define VTKIMAGEDATA_H
 
 #include <vtkSmartPointer.h>
-#include <vtkGDCMImageReader.h>
+//#include <vtkGDCMImageReader.h>
 #include <vtkImageData.h>
 #include <imagedata.h>
 

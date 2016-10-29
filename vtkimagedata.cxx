@@ -1,5 +1,5 @@
 #include <vtkDICOMImageReader.h>
-#include <vtkGDCMImageReader.h>
+//#include <vtkGDCMImageReader.h>
 #include <vtkDirectory.h>
 #include <vtkStringArray.h>
 #include "vtkimagedata.h"

@@ -122,6 +122,7 @@ long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
     vector <vtkIdType> all_connected_cells;
     all_connected_cells.push_back(ID);
     int i=0;
+    map<QString, int> edgeCount;
     while(i<all_connected_cells.size()) {
         //cout << all_connected_cells[i] << endl;
         int num_of_cells = cellLinksFilter->GetNcells(all_connected_cells[i]);
@@ -153,6 +154,79 @@ long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
         }
         i++;
     }
+
+    //subsurfaces contains the surface
+    //QString Number;
+    //Number.setNum(surface->getCurrentSurface());
+    //QString s = "Connected Surface "+ Number;
+
+    for(int i =0;i<subsurfaces.size() ;i++)
+    {
+        QString edge1, edge2, edge3;
+
+        if(subsurfaces[i][0]  < subsurfaces[i][1] )
+        {
+            QString num1, num2;
+            num1.setNum(subsurfaces[i][0] );
+            num2.setNum(subsurfaces[i][1] );
+            edge1 = num1 + num2;
+        }
+        else
+        {
+            QString num1, num2;
+            num1.setNum(subsurfaces[i][1] );
+            num2.setNum(subsurfaces[i][0] );
+            edge1 = num1 + num2;
+        }
+        edgeCount[edge1] +=1 ;
+        if(subsurfaces[i][1]  < subsurfaces[i][2] )
+        {
+            QString num1, num2;
+            num1.setNum(subsurfaces[i][1] );
+            num2.setNum(subsurfaces[i][2] );
+            edge2 = num1 + num2;
+        }
+        else
+        {
+            QString num1, num2;
+            num1.setNum(subsurfaces[i][2] );
+            num2.setNum(subsurfaces[i][1] );
+            edge2 = num1 + num2;
+        }
+        edgeCount[edge2] +=1;
+        if(subsurfaces[i][0]  < subsurfaces[i][2] )
+        {
+            QString num1, num2;
+            num1.setNum(subsurfaces[i][0] );
+            num2.setNum(subsurfaces[i][2] );
+            edge3 = num1 + num2;
+        }
+        else
+        {
+            QString num1, num2;
+            num1.setNum(subsurfaces[i][2] );
+            num2.setNum(subsurfaces[i][0] );
+            edge3 = num1 + num2;
+        }
+        edgeCount[edge3] +=1;
+    }
+
+        int numOfOpenEdges = 0;
+        //string edge2 = subsurfaces[i][1] + subsurfaces[i][2];
+        //string edge3 = subsurfaces[i][2] + subsurfaces[i][0];
+        typedef std::map<QString, int>::iterator it;
+        for(it iterator = edgeCount.begin(); iterator != edgeCount.end(); iterator++ )
+        {
+            // iterator->first = key
+           // iterator->second = value
+           if (iterator->second < 2)
+           {
+                numOfOpenEdges  +=1;
+           }
+        }
+
+
+    numberOfOpenEdges.push_back(numOfOpenEdges);
     return all_connected_cells.size();
 }
 
@@ -203,12 +277,14 @@ void VTKSurface::showNextSurface() {
     current_surface += 1;
     if(current_surface>=connectedComponents.size())
         current_surface = 0;
+    cout << "surfaceId, numOfOpenEdges "<< current_surface << " , " <<numberOfOpenEdges[current_surface ] << endl;
 }
 
 void VTKSurface::showPreviousSurface() {
     current_surface -= 1;
     if(current_surface<0)
         current_surface = connectedComponents.size()-1;
+    cout << "surfaceId, numOfOpenEdges "<< current_surface << " , " <<numberOfOpenEdges[current_surface ] << endl;
 }
 
 int VTKSurface::getCurrentSurface() {

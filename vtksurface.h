@@ -31,6 +31,7 @@ private :
     vtkSmartPointer<vtkImageData> modifiedData;
     vtkSmartPointer<vtkCellArray> polyArray; //Array of triangles
     vector<vtkSmartPointer<vtkCellArray> > connectedComponents;
+    vector<int> numberOfOpenEdges;
     float red; float blue; float green;
     int extent[6];
     double bounds[6];
