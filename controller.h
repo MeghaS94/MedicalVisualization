@@ -36,6 +36,8 @@ public:
     void updateTransferFunctions();
     void updateSurface(int i);
     void updateThreshold(int val);
+    void removeSurfaces();
+    void removeSurface();
 
 private:
     Ui::Widget* ui1;

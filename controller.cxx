@@ -115,6 +115,7 @@ void Controller::drawSurface() {
     //surface->render(window5);
     ui2->surface->setText("Complete Surface");
     ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
+    volume->addPadding();
     surface->setImageData(imageData);
     surface->setLayers(&layers[0], layers.size());
     surface->createSurface();
@@ -126,8 +127,6 @@ void Controller::drawSurface() {
 
 void Controller::updateSurface(int i) {
     QString Number;
-    Number.setNum(surface->getCurrentSurface());
-    QString s = "Connected Surface "+ Number;
     if(i==0) {
         surface->showCompleteSurface();
         status = true;
@@ -138,6 +137,8 @@ void Controller::updateSurface(int i) {
         surface->showNextSurface();
         if(!status) {
             surface->showComponentSurface();
+            Number.setNum(surface->getCurrentSurface());
+            QString s = "Connected Surface "+ Number;
             ui2->surface->setText(s);
             ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
         }
@@ -145,6 +146,8 @@ void Controller::updateSurface(int i) {
     else if(i==2) {
         surface->showComponentSurface();
         status = false;
+        Number.setNum(surface->getCurrentSurface());
+        QString s = "Connected Surface "+ Number;
         ui2->surface->setText(s);
         ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
     }
@@ -152,6 +155,8 @@ void Controller::updateSurface(int i) {
         surface->showPreviousSurface();
         if(!status) {
             surface->showComponentSurface();
+            Number.setNum(surface->getCurrentSurface());
+            QString s = "Connected Surface "+ Number;
             ui2->surface->setText(s);
             ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
         }
@@ -159,7 +164,15 @@ void Controller::updateSurface(int i) {
 }
 
 void Controller::updateThreshold(int val) {
-    //surface->updateThreshold(val);
+    surface->updateThreshold(val);
+}
+
+void Controller::removeSurfaces() {
+    surface->removeSurfaces();
+}
+
+void Controller::removeSurface() {
+    surface->removeSurface();
 }
 
 void Controller::updateVolumePlanes() {

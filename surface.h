@@ -29,6 +29,8 @@ public:
     virtual long getMinimum() = 0;
     virtual long getMaximum() = 0;
     virtual void updateThreshold(int val) = 0;
+    virtual void removeSurfaces() = 0;
+    virtual void removeSurface() = 0;
 
 protected:
     double isovalue_start; //bone, tissue etc

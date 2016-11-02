@@ -41,3 +41,11 @@ void Widget2::on_radioBtnComponent_clicked() {
 void Widget2::on_threshold_valueChanged(int val) {
     controller->updateThreshold(val);
 }
+
+void Widget2::on_btnRemove_clicked() {
+    controller->removeSurfaces();
+}
+
+void Widget2::on_btnRemove2_clicked() {
+    controller->removeSurface();
+}

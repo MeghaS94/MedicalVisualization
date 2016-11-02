@@ -69,6 +69,28 @@ void VTKVolume::createVolume()
     volume->SetMapper(volmapper);
 }
 
+void VTKVolume::addPadding() {
+    extractVOI->SetInputData(imageData->getOriginalImageData());
+    int tempextent[6];
+    imageData->getOriginalImageData()->GetExtent(tempextent);
+    int padextent[6];
+    for(int i=0; i<6; i+=2) {
+        if((extent[i]-1)<tempextent[i])
+            padextent[i]=tempextent[i];
+        else
+            padextent[i]=extent[i]-1;
+    }
+    for(int i=1; i<6; i+=2) {
+        if((extent[i]+1)>tempextent[i])
+            padextent[i]=tempextent[i];
+        else
+            padextent[i]=extent[i]+1;
+    }
+    extractVOI->SetVOI(padextent[0],padextent[1],padextent[2],padextent[3],padextent[4],padextent[5]);
+    extractVOI->Update();
+    imageData->setImageData(extractVOI->GetOutput());
+}
+
 void VTKVolume::updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax) {
     extractVOI->SetInputData(imageData->getOriginalImageData());
     extractVOI->SetVOI(xmin,xmax,ymin,ymax,zmin,zmax);

@@ -96,10 +96,12 @@ void VTKSurface::createSurface()
                 else
                     modifiedData->SetScalarComponentFromFloat(x,y,z,0,0.0);*/
                 modifiedData->SetScalarComponentFromFloat(x,y,z,0,0.0);
-                for(int i=0; i<numberOfLayers; i++) {
-                    if(layers[i].on && pixel2>=layers[i].isovalueStart && pixel2<=layers[i].isovalueEnd) {
-                        modifiedData->SetScalarComponentFromFloat(x,y,z,0,1.0);
-                        break;
+                if(x>extent[0] && x<extent[1] && y>extent[2] && y<extent[3] && z>extent[4] && z<extent[5]) {
+                    for(int i=0; i<numberOfLayers; i++) {
+                        if(layers[i].on && pixel2>=layers[i].isovalueStart && pixel2<=layers[i].isovalueEnd) {
+                            modifiedData->SetScalarComponentFromFloat(x,y,z,0,1.0);
+                            break;
+                        }
                     }
                 }
             }
@@ -122,7 +124,6 @@ long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
     vector <vtkIdType> all_connected_cells;
     all_connected_cells.push_back(ID);
     int i=0;
-    map<QString, int> edgeCount;
     while(i<all_connected_cells.size()) {
         //cout << all_connected_cells[i] << endl;
         int num_of_cells = cellLinksFilter->GetNcells(all_connected_cells[i]);
@@ -135,10 +136,10 @@ long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
         {
             surface->GetOutput()->GetCellPoints(connectedCells[j], npts, pts );
             //surface->GetOutput()->GetCellPoints(connectedCells[j], npts, pts );
-            //if(!Array2[connectedCells[j]]) {
+            if(!Array2[connectedCells[j]]) {
                 subsurfaces.push_back(pts);
-            //    Array2[connectedCells[j]]=true;
-            //}
+                Array2[connectedCells[j]]=true;
+            }
             if(!Array[pts[0]]) {
                 Array[pts[0]]=true;
                 all_connected_cells.push_back(pts[0]);
@@ -154,79 +155,6 @@ long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
         }
         i++;
     }
-
-    //subsurfaces contains the surface
-    //QString Number;
-    //Number.setNum(surface->getCurrentSurface());
-    //QString s = "Connected Surface "+ Number;
-
-    for(int i =0;i<subsurfaces.size() ;i++)
-    {
-        QString edge1, edge2, edge3;
-
-        if(subsurfaces[i][0]  < subsurfaces[i][1] )
-        {
-            QString num1, num2;
-            num1.setNum(subsurfaces[i][0] );
-            num2.setNum(subsurfaces[i][1] );
-            edge1 = num1 + num2;
-        }
-        else
-        {
-            QString num1, num2;
-            num1.setNum(subsurfaces[i][1] );
-            num2.setNum(subsurfaces[i][0] );
-            edge1 = num1 + num2;
-        }
-        edgeCount[edge1] +=1 ;
-        if(subsurfaces[i][1]  < subsurfaces[i][2] )
-        {
-            QString num1, num2;
-            num1.setNum(subsurfaces[i][1] );
-            num2.setNum(subsurfaces[i][2] );
-            edge2 = num1 + num2;
-        }
-        else
-        {
-            QString num1, num2;
-            num1.setNum(subsurfaces[i][2] );
-            num2.setNum(subsurfaces[i][1] );
-            edge2 = num1 + num2;
-        }
-        edgeCount[edge2] +=1;
-        if(subsurfaces[i][0]  < subsurfaces[i][2] )
-        {
-            QString num1, num2;
-            num1.setNum(subsurfaces[i][0] );
-            num2.setNum(subsurfaces[i][2] );
-            edge3 = num1 + num2;
-        }
-        else
-        {
-            QString num1, num2;
-            num1.setNum(subsurfaces[i][2] );
-            num2.setNum(subsurfaces[i][0] );
-            edge3 = num1 + num2;
-        }
-        edgeCount[edge3] +=1;
-    }
-
-        int numOfOpenEdges = 0;
-        //string edge2 = subsurfaces[i][1] + subsurfaces[i][2];
-        //string edge3 = subsurfaces[i][2] + subsurfaces[i][0];
-        typedef std::map<QString, int>::iterator it;
-        for(it iterator = edgeCount.begin(); iterator != edgeCount.end(); iterator++ )
-        {
-            // iterator->first = key
-           // iterator->second = value
-           if (iterator->second < 2)
-           {
-                numOfOpenEdges  +=1;
-           }
-        }
-
-
-    numberOfOpenEdges.push_back(numOfOpenEdges);
     return all_connected_cells.size();
 }
 
@@ -247,6 +175,66 @@ void VTKSurface::makeConnectedSurfaces()
             createConnectedSurfaces();
         }
     }
+    sort(connectedComponents.begin(), connectedComponents.end(), compareFunc());
+    vtkIdType npts; vtkIdType *pts;
+    for(int i=0; i<connectedComponents.size(); i++) {
+        connectedComponents[i]->InitTraversal();
+        map<QString, int> edgeCount;
+        while(connectedComponents[i]->GetNextCell(npts, pts)) {
+            QString edge1, edge2, edge3;
+            if(pts[0]  < pts[1] ) {
+                QString num1, num2;
+                num1.setNum(pts[0] );
+                num2.setNum(pts[1] );
+                edge1 = num1 + num2;
+            }
+            else {
+                QString num1, num2;
+                num1.setNum(pts[1] );
+                num2.setNum(pts[0] );
+                edge1 = num1 + num2;
+            }
+            edgeCount[edge1] +=1 ;
+            if(pts[1]  < pts[2] ) {
+                QString num1, num2;
+                num1.setNum(pts[1] );
+                num2.setNum(pts[2] );
+                edge2 = num1 + num2;
+            }
+            else {
+                QString num1, num2;
+                num1.setNum(pts[2] );
+                num2.setNum(pts[1] );
+                edge2 = num1 + num2;
+            }
+            edgeCount[edge2] +=1;
+            if(pts[0]  < pts[2] )
+            {
+                QString num1, num2;
+                num1.setNum(pts[0] );
+                num2.setNum(pts[2] );
+                edge3 = num1 + num2;
+            }
+            else
+            {
+                QString num1, num2;
+                num1.setNum(pts[2] );
+                num2.setNum(pts[0] );
+                edge3 = num1 + num2;
+            }
+            edgeCount[edge3] +=1;
+        }
+
+        int numOfOpenEdges = 0;
+        typedef std::map<QString, int>::iterator it;
+        for(it iterator = edgeCount.begin(); iterator != edgeCount.end(); iterator++ ) {
+            // iterator->first = key
+           // iterator->second = value
+           if (iterator->second < 2)
+                numOfOpenEdges  +=1;
+        }
+        numberOfOpenEdges.push_back(numOfOpenEdges);
+    }
 }
 
 void VTKSurface::showCompleteSurface() {
@@ -255,6 +243,8 @@ void VTKSurface::showCompleteSurface() {
     surface->Update();
     actor1->GetProperty()->SetOpacity(1.0);
     actor2->GetProperty()->SetOpacity(1.0);
+    actor1->GetProperty()->SetColor(red, blue, green);
+    actor2->GetProperty()->SetColor(1.0, 0.0, 0.0);
     actor->VisibilityOff();
     renderer->GetRenderWindow()->Render();
 }
@@ -269,6 +259,8 @@ void VTKSurface::showComponentSurface() {
         actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
     actor1->GetProperty()->SetOpacity(0.1);
     actor2->GetProperty()->SetOpacity(0.1);
+    actor1->GetProperty()->SetColor(red, blue, green);
+    actor2->GetProperty()->SetColor(1.0, 0.0, 0.0);
     actor->VisibilityOn();
     renderer->GetRenderWindow()->Render();
 }
@@ -316,6 +308,7 @@ void VTKSurface::updateThreshold(int val) {
     small=0;
     cout << "here1 " << val << " " << threshold << endl;
     for(int i=0; i<connectedComponents.size(); i++) {
+        connectedComponents[i]->InitTraversal();
         if(connectedComponents[i]->GetNumberOfCells()>threshold)
             big+=connectedComponents[i]->GetNumberOfCells();
         else
@@ -325,10 +318,20 @@ void VTKSurface::updateThreshold(int val) {
     cout << big << endl;
     cout << small << endl;
 
-    celldata[0]->Allocate(celldata[0]->EstimateSize(big, 3));
-    celldata[1]->Allocate(celldata[1]->EstimateSize(small, 3));
+    //celldata[0]->Allocate(celldata[0]->EstimateSize(big, 3));
+    //celldata[1]->Allocate(celldata[1]->EstimateSize(small, 3));
+    //celldata[0] = vtkSmartPointer<vtkCellArray>::New();
+    //celldata[1] = vtkSmartPointer<vtkCellArray>::New();
+    //celldata[0]->Initialize();
+    //celldata[1]->Initialize();
+    celldata[0]->Reset();
+    celldata[1]->Reset();
+    celldata[0] = vtkSmartPointer<vtkCellArray>::New();
+    celldata[1] = vtkSmartPointer<vtkCellArray>::New();
+    celldata[0]->Allocate(celldata[0]->EstimateSize(big+1, 3));
+    celldata[1]->Allocate(celldata[1]->EstimateSize(small+1, 3));
 
-    //cout << connectedComponents.size() << endl;
+    cout << connectedComponents.size() << endl;
     //vtkIdType npts; vtkIdType *pts;
     for(int i=0; i<connectedComponents.size(); i++) {
         if(connectedComponents[i]->GetNumberOfCells()>threshold) {
@@ -340,15 +343,32 @@ void VTKSurface::updateThreshold(int val) {
                 celldata[1]->InsertNextCell(npts, pts);
         }
     }
-
+    vtkIdType temppts[] = {0,0,0};
+    celldata[0]->InsertNextCell(npts, temppts);
+    celldata[1]->InsertNextCell(npts, temppts);
     cout << celldata[0]->GetNumberOfCells() << endl;
     cout << celldata[1]->GetNumberOfCells() << endl;
 
     data[0]->SetPolys(celldata[0]);
     data[1]->SetPolys(celldata[1]);
-    mapper1->SetInputData(data[0]);
-    mapper2->SetInputData(data[1]);
     renderer->GetRenderWindow()->Render();
+}
+
+void VTKSurface::removeSurfaces() {
+    int i=0;
+    while(i<connectedComponents.size() && connectedComponents[i]->GetNumberOfCells()>threshold)
+        i++;
+    connectedComponents.erase (connectedComponents.begin()+i,connectedComponents.end());
+    numberOfOpenEdges.erase (numberOfOpenEdges.begin()+i,numberOfOpenEdges.end());
+    updateThreshold(threshold);
+}
+
+void VTKSurface::removeSurface() {
+    connectedComponents.erase (connectedComponents.begin()+current_surface);
+    numberOfOpenEdges.erase (numberOfOpenEdges.begin()+current_surface);
+    updateThreshold(threshold);
+    if(!whole)
+        showComponentSurface();
 }
 
 long VTKSurface::getNumberOfTriangles(bool status) {
@@ -387,7 +407,6 @@ void VTKSurface::render(Window *window)
     //renderer->SetBackground(.1, .2, .3);
 
     renderer->AddActor(actor);
-    cout << "here2" << endl;
 
     renderer->SetBackground(.0, .0, .0);
     renderer->ResetCamera();
@@ -428,12 +447,16 @@ void VTKSurface::render(Window *window)
     //surface->update();
     actor->VisibilityOff();
 
+    cout << big << endl;
+    cout << small << endl;
+
     celldata[0]->Allocate(celldata[0]->EstimateSize(big, 3));
     celldata[1]->Allocate(celldata[1]->EstimateSize(small, 3));
 
     cout << connectedComponents.size() << endl;
     //vtkIdType npts; vtkIdType *pts;
     for(int i=0; i<connectedComponents.size(); i++) {
+        connectedComponents[i]->InitTraversal();
         if(connectedComponents[i]->GetNumberOfCells()>threshold) {
             while(connectedComponents[i]->GetNextCell(npts, pts))
                 celldata[0]->InsertNextCell(npts, pts);
@@ -459,6 +482,7 @@ void VTKSurface::render(Window *window)
     actor2->SetMapper(mapper2);
     actor2->GetProperty()->SetColor(1.0, 0.0, 0.0);
     actor2->GetProperty()->SetOpacity(1.0);
+    //actor1->VisibilityOff();
     renderer->AddActor(actor1);
     renderer->AddActor(actor2);
 }

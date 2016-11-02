@@ -62,6 +62,7 @@ public:
     void setLayers(Layer* layers, int n);
     void createVolume();
     void updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax);
+    void addPadding();
     void render(Window *window);
     void updateTransferFunctions();
     void updatePlane(Slice* slice, int type);    

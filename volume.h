@@ -25,6 +25,7 @@ public:
     virtual void setLayers(Layer* layers, int numberOfLayers) = 0;
     virtual void createVolume() = 0;
     virtual void updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax)=0;
+    virtual void addPadding()=0;
     virtual void makeIntervals() =0;
     virtual void updatePlane(Slice* slice, int type)=0;
     virtual void axialPlane(bool visibility)=0;

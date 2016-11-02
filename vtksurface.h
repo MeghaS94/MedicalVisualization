@@ -20,6 +20,14 @@
 
 using namespace std;
 
+struct compareFunc
+{
+    inline bool operator() (const vtkSmartPointer<vtkCellArray>& arr1, const vtkSmartPointer<vtkCellArray>& arr2)
+    {
+        return (arr1->GetNumberOfCells() > arr2->GetNumberOfCells());
+    }
+};
+
 class VTKSurface : public Surface
 {
 private :
@@ -75,6 +83,8 @@ public:
     long getMinimum();
     long getMaximum();
     void updateThreshold(int val);
+    void removeSurfaces();
+    void removeSurface();
     int getCurrentSurface();
     long getNumberOfTriangles(bool status);
 
