@@ -132,7 +132,7 @@ void VTKSlice::render(Window* window ) {
 
     // Set up the interaction
     vtkSmartPointer<vtkInteractorStyleImage> imageStyle = vtkSmartPointer<vtkInteractorStyleImage>::New();
-    vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    vtkSmartPointer<QVTKInteractor> interactor = vtkSmartPointer<QVTKInteractor>::New();
     interactor->SetInteractorStyle(imageStyle);
     ((VTKWindow*)window)->getWidget()->GetRenderWindow()->SetInteractor(interactor);
 

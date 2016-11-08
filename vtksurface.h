@@ -5,6 +5,10 @@
 #include "vtkimagedata.h"
 #include <string>
 #include <vtkSmartPointer.h>
+#include <vtkPoints.h>
+#include <vtkPolyData.h>
+#include <vtkPointData.h>
+#include <vtkUnsignedCharArray.h>
 #include <vtkContourFilter.h>
 #include <vtkMarchingCubes.h>
 #include <vtkImageData.h>
@@ -17,6 +21,18 @@
 #include <vtkPolyDataMapper.h>
 #include <map>
 #include <set>
+#include <vtkRendererCollection.h>
+#include <vtkPointPicker.h>
+#include <vtkSphereSource.h>
+#include <vtkRenderWindow.h>
+#include "QVTKInteractorAdapter.h"
+#include "QVTKInteractor.h"
+#include <vtkRenderWindowInteractor.h>
+#include <vtkActor.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkObjectFactory.h>
+#include <qevent.h>
+#include <vtkVertexGlyphFilter.h>
 
 using namespace std;
 
@@ -27,6 +43,21 @@ struct compareFunc
         return (arr1->GetNumberOfCells() > arr2->GetNumberOfCells());
     }
 };
+
+struct Annotation{
+    float x;
+    float y;
+    float z;
+    string text;
+    float r;
+    float g;
+    float b;
+    //Actor
+    //Renderer
+    //point id's
+};
+
+
 
 class VTKSurface : public Surface
 {
@@ -63,12 +94,17 @@ private :
     vtkSmartPointer<vtkActor> actor;
     vtkSmartPointer<vtkActor> actor1;
     vtkSmartPointer<vtkActor> actor2;
+
     vtkSmartPointer<vtkPolyDataMapper> mapper1;
     vtkSmartPointer<vtkPolyDataMapper> mapper2;
+
 
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
     VTKSurface(double isovalue_start, double isovalue_end, float r, float g, float b);
+
+    void mousePressEvent(QMouseEvent *event);
+
     void setImageData(ImageData* data);
     void setLayers(Layer* layers, int n);
     void render(Window *window);
