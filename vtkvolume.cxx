@@ -124,24 +124,85 @@ void VTKVolume::makeIntervals()
     //cout  << "x: " << bounds[0] << " y: " << bounds[1] << " z: " << bounds[2] << endl;
     cout  << "min intensity: " << range[0] << " max intensity: " << range[1] << endl;
     cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
-    //cout << intervalLen << endl;
-    voxel_count = 0; //count of the total number of voxels
+
+    //voi extents - x-> 100, 400 | 250, 511
+    //y-> 50, 250 | 50, 210
+    //z -> 50, 200 | 0, 249
+
+    int y =  ( extent[3] - extent[2] )/2.0;
+    int z = ( extent[5] - extent[4] )/2.0;
+    int count = 0;
+    float min, max;
+    min = (imageData->getImageData()->GetScalarComponentAsFloat(100,y,z,0));
+    max = (imageData->getImageData()->GetScalarComponentAsFloat(100,y,z,0));
     for(int x=extent[0];x<=extent[1];x++)
     {
-        for(int y=extent[2];y<=extent[3];y++)
-        {
-            for(int z=extent[4];z<=extent[5];z++)
-            {
+        //for(int y=extent[2];y<=extent[3];y++)
+        //{
+          //  for(int z=extent[4];z<=extent[5];z++)
+            //{
                 //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
                 float pixel =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
-                //if(pixel>=50) {
-                    int bin = (int)((pixel-minIntensity)/intervalLen);
-                    Map[bin] +=1;
-                //}
-                voxel_count +=1;
-            }
-        }
+                cout << "Intensity along a ray : "<<pixel << endl;
+                if (pixel < min)
+                        {
+                       min = pixel;
+                }
+                if (pixel > max)
+                {
+                    max = pixel;
+                }
+                //int count = 0;
+
+            //}
+        //}
     }
+
+   vector< vector<float> >  intervals;
+   vector<int> counts;
+   float num_of_intervals = (max - min)/10.0;
+   float temp = min;
+   for(int i=0;i<num_of_intervals;i++)
+        {
+        vector<float> interval;
+        interval.push_back(temp);
+        interval.push_back(temp+ 10.0);
+        temp = temp +10.0;
+        intervals.push_back(interval);
+        counts.push_back(0);
+         }
+
+
+   for(int x=extent[0];x<=extent[1];x++)
+   {
+       //for(int y=extent[2];y<=extent[3];y++)
+       //{
+         //  for(int z=extent[4];z<=extent[5];z++)
+           //{
+               //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
+               float pixel =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
+               //cout << "Intensity along a ray : "<<pixel << endl;
+               for (int j=0;j< intervals.size();j++)
+               {
+                   if (intervals[j][0] < pixel &&  intervals[j][1] > pixel )
+                   {
+                       counts[j] += 1;
+                       break;
+                   }
+               }
+
+
+           //}
+       //}
+   }
+
+   cout << "print histogram" << endl;
+   for (int j=0;j< intervals.size();j++)
+   {
+       cout << intervals[j][0] << " - " << intervals[j][1] << " -> " << counts[j] << endl;
+   }
+
+
 }
 
 void VTKVolume::changePlanes() {
