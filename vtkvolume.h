@@ -15,7 +15,7 @@
 #include <vtkExtractVOI.h>
 #include <vtkColorTransferFunction.h>
 #include <vtkPiecewiseFunction.h>
-
+#include <map>
 #include "slice.h"
 #include "layer.h"
 
