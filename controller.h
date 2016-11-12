@@ -38,6 +38,9 @@ public:
     void updateThreshold(int val);
     void removeSurfaces();
     void removeSurface();
+    void changeMode(int mode);
+    void addAnnotation();
+    void print();
 
 private:
     Ui::Widget* ui1;

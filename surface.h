@@ -31,6 +31,9 @@ public:
     virtual void updateThreshold(int val) = 0;
     virtual void removeSurfaces() = 0;
     virtual void removeSurface() = 0;
+    virtual void changeMode(int mode) = 0;
+    virtual void addAnnotation() = 0;
+    virtual void print() = 0;
 
 protected:
     double isovalue_start; //bone, tissue etc

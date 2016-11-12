@@ -34,6 +34,9 @@ private slots:
     void on_threshold_valueChanged(int val);
     void on_btnRemove_clicked();
     void on_btnRemove2_clicked();
+    void on_tabMode_currentChanged(int mode);
+    void on_btnAnnotation_clicked();
+    void on_btnPrint_clicked();
 };
 
 #endif // WIDGET2_H

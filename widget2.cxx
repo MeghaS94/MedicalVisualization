@@ -49,3 +49,16 @@ void Widget2::on_btnRemove_clicked() {
 void Widget2::on_btnRemove2_clicked() {
     controller->removeSurface();
 }
+
+void Widget2::on_tabMode_currentChanged(int mode) {
+    printf("Tab Changeed %d\n", mode);
+    controller->changeMode(mode);
+}
+
+void Widget2::on_btnAnnotation_clicked() {
+    controller->addAnnotation();
+}
+
+void Widget2::on_btnPrint_clicked() {
+    controller->print();
+}

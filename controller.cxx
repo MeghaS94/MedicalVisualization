@@ -210,3 +210,15 @@ void Controller::setLayer(int i, bool status) {
 void Controller::updateTransferFunctions() {
     volume->updateTransferFunctions();
 }
+
+void Controller::changeMode(int mode) {
+    surface->changeMode(mode);
+}
+
+void Controller::addAnnotation() {
+    surface->addAnnotation();
+}
+
+void Controller::print() {
+    surface->print();
+}

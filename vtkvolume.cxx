@@ -102,6 +102,7 @@ void VTKVolume::updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int 
     createVolume();
     volumeRenderer->GetRenderWindow()->Render();
     cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
+    makeIntervals();
     //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
     //cout  << "x: " << bounds[0] << "x: " << bounds[1] << " y: " << bounds[2] << " y: " << bounds[3] << " z: " << bounds[4] << " z: " << bounds[5] << endl;
     //imageData->getOriginalImageData()->GetDimensions(dims);
@@ -129,8 +130,8 @@ void VTKVolume::makeIntervals()
     //y-> 50, 250 | 50, 210
     //z -> 50, 200 | 0, 249
 
-    int y =  ( extent[3] - extent[2] )/2.0;
-    int z = ( extent[5] - extent[4] )/2.0;
+    int y =  ( extent[3] + extent[2] )/2.0;
+    int z = ( extent[5] + extent[4] )/2.0;
     int count = 0;
     float min, max;
     min = (imageData->getImageData()->GetScalarComponentAsFloat(100,y,z,0));

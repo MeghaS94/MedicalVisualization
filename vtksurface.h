@@ -57,7 +57,7 @@ struct Annotation{
     //point id's
 };
 
-
+class MouseInteractorStylePP;
 
 class VTKSurface : public Surface
 {
@@ -87,17 +87,17 @@ private :
     int current_surface;
     bool whole;
     int threshold;
-    vtkSmartPointer<vtkCellArray> celldata[2];
-    vtkSmartPointer<vtkPolyData> data[2];
+    vtkSmartPointer<vtkCellArray> celldata2;
+    vtkSmartPointer<vtkPolyData> data2;
     long long small;
     long long big;
     vtkSmartPointer<vtkActor> actor;
-    vtkSmartPointer<vtkActor> actor1;
+    vector<vtkSmartPointer<vtkActor> > actor1;
     vtkSmartPointer<vtkActor> actor2;
-
     vtkSmartPointer<vtkPolyDataMapper> mapper1;
     vtkSmartPointer<vtkPolyDataMapper> mapper2;
-
+    bool pick;
+    vtkSmartPointer<MouseInteractorStylePP> style ;
 
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
@@ -123,6 +123,9 @@ public:
     void removeSurface();
     int getCurrentSurface();
     long getNumberOfTriangles(bool status);
+    void changeMode(int mode);
+    void addAnnotation();
+    void print();
 
 };
 
