@@ -34,6 +34,7 @@ void Controller::setFolderName(string foldername) {
     this->foldername = foldername;
 }
 
+
 void Controller::initialize()
 {
     imageData->loadData(foldername);
@@ -63,6 +64,9 @@ void Controller::initialize()
     sagittalSlice->render(window4);
 
     updateVolumePlanes();
+
+    vector<double> pixel_spacing = imageData->Spacing();
+    surface->setSpacing(pixel_spacing);
 
 }
 

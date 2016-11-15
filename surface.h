@@ -34,6 +34,7 @@ public:
     virtual void changeMode(int mode) = 0;
     virtual void addAnnotation() = 0;
     virtual void print() = 0;
+    virtual void setSpacing(vector<double> spacing)=0;
 
 protected:
     double isovalue_start; //bone, tissue etc

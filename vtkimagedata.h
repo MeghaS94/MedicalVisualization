@@ -15,6 +15,7 @@ public:
     vtkSmartPointer<vtkImageData> getOriginalImageData();
     void setImageData(vtkSmartPointer<vtkImageData> data);
     int* getExtent();
+    vector<double> Spacing();
 
 private:
     vtkSmartPointer<vtkImageData> originalImageData;

@@ -49,6 +49,7 @@ void VTKVolume::setImageData(ImageData* data) {
     imageData = (VTKImageData*) data;
     imageData->getImageData()->GetExtent(extent);
     imageData->getImageData()->GetBounds(bounds);
+
     //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
     cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
 }
@@ -226,6 +227,8 @@ void VTKVolume::changePlanes() {
     plane3->Update();
 
 }
+
+
 
 void VTKVolume::render(Window *window)
 {

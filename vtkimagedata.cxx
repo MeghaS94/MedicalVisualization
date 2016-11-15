@@ -45,7 +45,22 @@ void VTKImageData::loadData(string foldername) {
     data->Update();
     imageData = data->GetOutput();
     originalImageData = data->GetOutput();
+
+    //double spacing2[3];
+    //originalImageData->GetSpacing(spacing2);
+    //cout << "spacing : " << spacing2[0] << " , " << spacing2[1] << ", " << spacing2[2] << endl;
 }
+
+vector<double> VTKImageData::Spacing()
+{
+    double spacing[3];
+    imageData->GetSpacing(spacing);
+    cout << "spacing : " << spacing[0] << " , " << spacing[1] << ", " << spacing[2] << endl;
+    vector<double> pixel_spacing;
+    pixel_spacing.push_back(spacing[0]);   pixel_spacing.push_back(spacing[1]);   pixel_spacing.push_back(spacing[2]);
+    return pixel_spacing;
+}
+
 
 int* VTKImageData::getExtent() {
     return originalImageData->GetExtent();

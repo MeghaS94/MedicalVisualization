@@ -98,6 +98,10 @@ private :
     vtkSmartPointer<vtkPolyDataMapper> mapper2;
     bool pick;
     vtkSmartPointer<MouseInteractorStylePP> style ;
+    //spacing
+    double spacing_x;
+    double spacing_y;
+    double spacing_z;
 
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
@@ -126,6 +130,7 @@ public:
     void changeMode(int mode);
     void addAnnotation();
     void print();
+    void setSpacing(vector<double> spacing);
 
 };
 

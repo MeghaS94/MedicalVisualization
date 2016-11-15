@@ -1,5 +1,9 @@
 #include <QColorDialog>
 #include <QInputDialog>
+#include <vtkSTLWriter.h>
+#include <vtkSTLReader.h>
+#include <vtkCleanPolyData.h>
+#include <vtkAppendPolyData.h>
 #include <vtkActor.h>
 #include <vtkMarchingContourFilter.h>
 #include <vtkPolyDataMapper.h>
@@ -270,6 +274,7 @@ void VTKSurface::makeConnectedSurfaces()
         map<QString, int> edgeCount;
         while(connectedComponents[i]->GetNextCell(npts, pts)) {
             QString edge1, edge2, edge3;
+
             if(pts[0]  < pts[1] ) {
                 QString num1, num2;
                 num1.setNum(pts[0] );
@@ -589,15 +594,33 @@ void VTKSurface::render(Window *window)
     //iren->SetPicker(pointPicker);
 }
 
+void VTKSurface::setSpacing(vector<double> spacing)
+{
+    spacing_x = spacing[0]; spacing_y = spacing[1]; spacing_z = spacing[2];
+}
+
 void VTKSurface::print() {
+    vtkSmartPointer<vtkAppendPolyData> appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
     for(int i=0; i<actor1.size(); i++) {
         if(actor1[i]->GetProperty()->GetColor()[0]==0.0 && actor1[i]->GetProperty()->GetColor()[1]==0.0 && actor1[i]->GetProperty()->GetColor()[2]==1.0) {
             vtkPolyDataMapper* mapper = (vtkPolyDataMapper*) actor1[i]->GetMapper();
             vtkPolyData* data = mapper->GetInput();
             cout << "Printing Actor " << i << endl;
-            // write data to stl format
+            appendFilter->AddInputData(data);
         }
 
     }
+    appendFilter->Update();
+    // Remove any duplicate points.
+    vtkSmartPointer<vtkCleanPolyData> cleanFilter = vtkSmartPointer<vtkCleanPolyData>::New();
+    cleanFilter->SetInputConnection(appendFilter->GetOutputPort());
+    cleanFilter->Update();
+    // write data to stl format
+    QString str = QInputDialog::getText(0, "Enter filename", "Example : filename.stl:");
+    std::string filename = str.toStdString();
+    vtkSmartPointer<vtkSTLWriter> stlWriter = vtkSmartPointer<vtkSTLWriter>::New();
+    stlWriter->SetFileName(filename.c_str());
+    stlWriter->SetInputConnection(cleanFilter->GetOutputPort());
+    stlWriter->Write();
 }
 
