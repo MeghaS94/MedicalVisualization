@@ -17,7 +17,7 @@ public:
     virtual void setImageDataVolume(ImageData* data, Volume* volume) = 0;
     virtual void createSlice() = 0;
     virtual void updateSlice() = 0;
-    int getType();
+    virtual int getType()=0;
     virtual double getPosition() = 0;
     virtual void updateTransferFunction() = 0;
 

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <string>
 #include "widget2.h"
+#include "widget3.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ private:
     Ui::Widget* ui;
     Controller* controller;
     Widget2 w;
+    Widget3 w3;
 
 private slots:
     void on_btnOpen_clicked();
@@ -64,6 +66,7 @@ private slots:
     void on_maxBox5_valueChanged(int val);
     void on_tabMode_currentChanged(int mode);
     void on_btnReset_clicked();
+    void on_btnHistogram_clicked();
 };
 
 #endif // WIDGET_H

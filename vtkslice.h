@@ -32,6 +32,7 @@ public:
     void updateSlice();
     void render(Window *window );
     double getPosition();
+    int getType();
     void updateTransferFunction();
 };
 

@@ -4,6 +4,7 @@
 #include "window.h"
 #include "widget.h"
 #include "widget2.h"
+#include "widget3.h"
 #include "imagedata.h"
 #include "volume.h"
 #include "slice.h"
@@ -11,6 +12,7 @@
 #include "layer.h"
 #include "ui_widget.h"
 #include "ui_widget2.h"
+#include "ui_widget3.h"
 #include <string>
 #include <vector>
 
@@ -19,7 +21,7 @@ using namespace std;
 class Controller
 {
 public:
-    Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2);
+    Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2,  Ui::Widget3* ui_arg3);
     void setFolderName(string foldername);
     void initialize();
     void initializeVOIButtons();
@@ -46,10 +48,12 @@ public:
     void changeMode(int mode);
     void addAnnotation();
     void print();
+    void makeHistogram();
 
 private:
     Ui::Widget* ui1;
     Ui::Widget2* ui2;
+    Ui::Widget3* ui3;
     Window* window1;
     Window* window2;
     Window* window3;

@@ -11,7 +11,7 @@
 #include <vtkImageMapper3D.h>
 #include <vtkDICOMImageReader.h>
 #include <vtkInteractorStyleImage.h>
-
+#include <vtkPolyData.h>
 #include "vtkslice.h"
 #include "window.h"
 #include "vtkwindow.h"
@@ -123,6 +123,11 @@ double VTKSlice::getPosition() {
         return (slice->GetResliceAxes()->GetElement(0, 3)-getData()->GetBounds()[0])/getData()->GetSpacing()[0];
 }
 
+int VTKSlice::getType()
+{
+    return type;
+}
+
 void VTKSlice::render(Window* window ) {
     // Create a greyscale lookup table
     vtkSmartPointer<vtkLookupTable> table =
@@ -210,7 +215,7 @@ void vtkSliceInteractionCallback::Execute(vtkObject *, unsigned long event, void
             // Increment slice position by deltaY of mouse
             int deltaY = lastPos[1] - currPos[1];
             slice->getSlice()->Update();
-            double sliceSpacing = 0.05;//slice->getSlice()->GetOutput()->GetSpacing()[0];
+            double sliceSpacing = slice->getSlice()->GetOutput()->GetSpacing()[0];
             double bounds[6];
             slice->getData()->GetBounds(bounds);
             vtkMatrix4x4 *matrix = slice->getSlice()->GetResliceAxes();

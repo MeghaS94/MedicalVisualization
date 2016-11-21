@@ -12,10 +12,11 @@
 
 using namespace std;
 
-Controller::Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2)
+Controller::Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2, Ui::Widget3* ui_arg3)
 {
     ui1 = ui_arg1;
     ui2 = ui_arg2;
+    ui3 = ui_arg3;
     window1 = new VTKWindow(ui1->widget1);
     window2 = new VTKWindow(ui1->widget2);
     window3 = new VTKWindow(ui1->widget3);
@@ -69,6 +70,19 @@ void Controller::initialize()
 
     vector<double> pixel_spacing = imageData->Spacing();
     surface->setSpacing(pixel_spacing);
+
+}
+
+void Controller::makeHistogram()
+{
+ int type1 = 1;
+ double position_axial = axialSlice->getPosition();
+
+ int type2 = 2;
+ double position_coronal = coronalSlice->getPosition();
+
+ int type3 = 3;
+ double position_sagittal = sagittalSlice->getPosition();
 
 }
 
