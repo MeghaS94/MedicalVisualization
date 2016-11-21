@@ -55,22 +55,29 @@ private :
                                 {{0.8,0.2,0.8},{0.8,1,0.8}}};
     Layer* layers;
     int numberOfLayers;
+    Layer* customLayers;
+    int numberOfCustomLayers;
+    int currentLayerTab;
 
 public:
     VTKVolume();
     void setImageData(ImageData* data);
     void setLayers(Layer* layers, int n);
+    void setCustomLayers(Layer* customLayers, int n);
     void createVolume();
     void updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax);
     void addPadding();
     void render(Window *window);
     void updateTransferFunctions();
+    void changeLayerMode(int mode);
     void updatePlane(Slice* slice, int type);    
     void makeIntervals();
     void axialPlane(bool visibility);
     void coronalPlane(bool visibility);
     void sagittalPlane(bool visibility);
     void changePlanes();
+    vtkSmartPointer<vtkColorTransferFunction> getColorFun();
+    vtkSmartPointer<vtkPiecewiseFunction> getOpacityFun();
 };  
 
 #endif // VTKVOLUME_H

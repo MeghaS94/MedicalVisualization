@@ -51,7 +51,7 @@ void Widget2::on_btnRemove2_clicked() {
 }
 
 void Widget2::on_tabMode_currentChanged(int mode) {
-    printf("Tab Changeed %d\n", mode);
+    //printf("Tab Changeed %d\n", mode);
     controller->changeMode(mode);
 }
 

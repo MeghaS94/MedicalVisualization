@@ -40,6 +40,7 @@ class MouseInteractorStylePP : public vtkInteractorStyleTrackballCamera
     int yTextPos = 700;
     bool pick = false;
     bool annotate = false;
+    VTKSurface* surface;
     virtual void OnLeftButtonDown()
     {
         if(pick) {
@@ -53,52 +54,67 @@ class MouseInteractorStylePP : public vtkInteractorStyleTrackballCamera
             double picked[3];
             picker->GetPickPosition(picked);
             std::cout << "Picked value: " << picked[0] << " " << picked[1] << " " << picked[2] << std::endl;
-            if(annotate) {
-                Annotation a;
-                a.x = picked[0] ;
-                a.y = picked[1] ;
-                a.z = picked[2] ;
-                //QColor colour = QColorDialog::getColor();
-                a.r = 1.0;
-                a.g = 1.0;
-                a.b = 1.0;
-                Annotations.push_back(a);
-                vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-                sphereSource->SetCenter(a.x, a.y , a.z);
-                sphereSource->SetRadius(5.0);
-                vtkSmartPointer<vtkPolyDataMapper> mapper4 = vtkSmartPointer<vtkPolyDataMapper>::New();
-                vtkSmartPointer<vtkActor> actor4 = vtkSmartPointer<vtkActor>::New();
-                mapper4->SetInputConnection(sphereSource->GetOutputPort());
-                actor4->SetMapper(mapper4);
-                actor4->GetProperty()->SetColor(a.r, a.g, a.b);
-                this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddActor(actor4);
-                QColor colour = QColorDialog::getColor();
-                a.r = colour.red()/255.0;
-                a.g = colour.green()/255.0;
-                a.b = colour.blue()/255.0;
-                actor4->GetProperty()->SetColor(a.r, a.g, a.b);
-                // Setup the text and add it to the renderer
-                QString str = QInputDialog::getText(0, "Annotation Text", "Enter Text:");
-                a.text = str.toStdString();
-                vtkSmartPointer<vtkTextActor> textActor = vtkSmartPointer<vtkTextActor>::New();
-                textActor->SetInput (a.text.c_str());
-                textActor->SetPosition ( 10, yTextPos );
-                textActor->GetTextProperty()->SetFontSize ( 16 );
-                textActor->GetTextProperty()->SetColor (a.r, a.g, a.b);
-                this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddActor2D (textActor);
-                yTextPos = yTextPos - 20;
+            vtkSmartPointer<vtkActor> actor = picker->GetActor();
+            if(annotate && actor) {
+                vector<vtkSmartPointer<vtkActor> > act = surface->getActors();
+                for(int i=0; i<act.size(); i++) {
+                    if(actor==act[i]) {
+                        Annotation a;
+                        a.x = picked[0] ;
+                        a.y = picked[1] ;
+                        a.z = picked[2] ;
+                        //QColor colour = QColorDialog::getColor();
+                        a.r = 1.0;
+                        a.g = 1.0;
+                        a.b = 1.0;
+                        vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+                        sphereSource->SetCenter(a.x, a.y , a.z);
+                        sphereSource->SetRadius(5.0);
+                        vtkSmartPointer<vtkPolyDataMapper> mapper4 = vtkSmartPointer<vtkPolyDataMapper>::New();
+                        vtkSmartPointer<vtkActor> actor4 = vtkSmartPointer<vtkActor>::New();
+                        mapper4->SetInputConnection(sphereSource->GetOutputPort());
+                        actor4->SetMapper(mapper4);
+                        actor4->GetProperty()->SetColor(a.r, a.g, a.b);
+                        this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddActor(actor4);
+                        QColor colour = QColorDialog::getColor();
+                        a.r = colour.red()/255.0;
+                        a.g = colour.green()/255.0;
+                        a.b = colour.blue()/255.0;
+                        actor4->GetProperty()->SetColor(a.r, a.g, a.b);
+                        // Setup the text and add it to the renderer
+                        QString str = QInputDialog::getText(0, "Annotation Text", "Enter Text:");
+                        a.text = str.toStdString();
+                        vtkSmartPointer<vtkTextActor> textActor = vtkSmartPointer<vtkTextActor>::New();
+                        textActor->SetInput (a.text.c_str());
+                        textActor->SetPosition ( 10, yTextPos );
+                        textActor->GetTextProperty()->SetFontSize ( 16 );
+                        textActor->GetTextProperty()->SetColor (a.r, a.g, a.b);
+                        a.actor = actor4;
+                        a.surfaceActor = act[i];
+                        a.textActor = textActor;
+                        a.index = i;
+                        Annotations.push_back(a);
+                        this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddActor2D (textActor);
+                        yTextPos = yTextPos - 20;
+                    }
+                }
                 annotate=false;
             }
             else {
                 vtkSmartPointer<vtkActor> actor = picker->GetActor();
                 if(actor) {
-                    if(actor->GetProperty()->GetColor()[0]==0.0 && actor->GetProperty()->GetColor()[1]==0.0 && actor->GetProperty()->GetColor()[2]==1.0) {
-                        actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
-                        cout << "Unpicking" << endl;
-                    }
-                    else {
-                        actor->GetProperty()->SetColor(0.0, 0.0, 1.0);
-                        cout << "Picking" << endl;
+                    vector<vtkSmartPointer<vtkActor> > a = surface->getActors();
+                    for(int i=0; i<a.size(); i++) {
+                        if(actor==a[i]) {
+                            if(actor->GetProperty()->GetColor()[0]==0.0 && actor->GetProperty()->GetColor()[1]==0.0 && actor->GetProperty()->GetColor()[2]==1.0) {
+                                actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
+                                cout << "Unpicking" << endl;
+                            }
+                            else {
+                                actor->GetProperty()->SetColor(0.0, 0.0, 1.0);
+                                cout << "Picking" << endl;
+                            }
+                        }
                     }
                 }
             }
@@ -115,6 +131,9 @@ class MouseInteractorStylePP : public vtkInteractorStyleTrackballCamera
     }
     void setAnnotate(bool a) {
         annotate = a;
+    }
+    void setVTKSurface(VTKSurface* s) {
+        surface = s;
     }
 };
 
@@ -160,6 +179,10 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, floa
     mapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
     pick = false;
     style = vtkSmartPointer<MouseInteractorStylePP>::New();
+}
+
+vector<vtkSmartPointer<vtkActor> > VTKSurface::getActors() {
+    return allActors;
 }
 
 void VTKSurface::setLayers(Layer* layers, int n) {
@@ -361,6 +384,8 @@ void VTKSurface::showComponentSurface() {
     }
     actor2->GetProperty()->SetColor(1.0, 0.0, 0.0);
     actor->VisibilityOn();
+    if(!visible[current_surface])
+        actor->VisibilityOff();
     renderer->GetRenderWindow()->Render();
 }
 
@@ -414,6 +439,11 @@ void VTKSurface::updateThreshold(int val) {
             small+=connectedComponents[i]->GetNumberOfCells();
     }
 
+    cout << "small :" << small << endl;
+
+    for(int i=0; i<actor1.size(); i++)
+        renderer->RemoveActor(actor1[i]);
+
     celldata2->Reset();
     celldata2 = vtkSmartPointer<vtkCellArray>::New();
     celldata2->Allocate(celldata2->EstimateSize(small+1, 3));
@@ -423,18 +453,19 @@ void VTKSurface::updateThreshold(int val) {
     //vtkIdType npts; vtkIdType *pts;
     for(int i=0; i<connectedComponents.size(); i++) {
         if(connectedComponents[i]->GetNumberOfCells()>threshold) {
-            vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
-            polydata->DeepCopy(wholeSurfacePolygons);
-            polydata->SetPolys(connectedComponents[i]);
-            vtkSmartPointer<vtkActor> act = vtkSmartPointer<vtkActor>::New();
-            vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New();
-            map->SetInputData(polydata);
-            map->ScalarVisibilityOff();
-            act->SetMapper(map);
-            act->GetProperty()->SetColor(red, blue, green);
-            act->GetProperty()->SetOpacity(1.0);
-            actor1.push_back(act);
-            renderer->AddActor(act);
+            if(visible[i]) {
+                vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+                polydata->ShallowCopy(wholeSurfacePolygons);
+                polydata->SetPolys(connectedComponents[i]);
+                vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New();
+                map->SetInputData(polydata);
+                map->ScalarVisibilityOff();
+                allActors[i]->SetMapper(map);
+                allActors[i]->GetProperty()->SetColor(red, blue, green);
+                allActors[i]->GetProperty()->SetOpacity(1.0);
+                actor1.push_back(allActors[i]);
+                renderer->AddActor(allActors[i]);
+            }
         }
         else {
             while(connectedComponents[i]->GetNextCell(npts, pts))
@@ -442,7 +473,7 @@ void VTKSurface::updateThreshold(int val) {
         }
     }
     vtkIdType temppts[] = {0,0,0};
-    celldata2->InsertNextCell(npts, temppts);
+    celldata2->InsertNextCell(3, temppts);
     data2->SetPolys(celldata2);
     renderer->GetRenderWindow()->Render();
 }
@@ -451,15 +482,25 @@ void VTKSurface::removeSurfaces() {
     int i=0;
     while(i<connectedComponents.size() && connectedComponents[i]->GetNumberOfCells()>threshold)
         i++;
-    connectedComponents.erase (connectedComponents.begin()+i,connectedComponents.end());
-    numberOfOpenEdges.erase (numberOfOpenEdges.begin()+i,numberOfOpenEdges.end());
+    //connectedComponents.erase (connectedComponents.begin()+i,connectedComponents.end());
+    //numberOfOpenEdges.erase (numberOfOpenEdges.begin()+i,numberOfOpenEdges.end());
+    for(; i<visible.size(); i++)
+        visible[i]=false;
     updateThreshold(threshold);
 }
 
 void VTKSurface::removeSurface() {
-    connectedComponents.erase (connectedComponents.begin()+current_surface);
-    numberOfOpenEdges.erase (numberOfOpenEdges.begin()+current_surface);
+    //connectedComponents.erase (connectedComponents.begin()+current_surface);
+    //numberOfOpenEdges.erase (numberOfOpenEdges.begin()+current_surface);
+    visible[current_surface]=false;
     updateThreshold(threshold);
+    for(int i=Annotations.size()-1; i>=0; i--) {
+        if(Annotations[i].index == current_surface) {
+            renderer->RemoveActor(Annotations[i].actor);
+            renderer->RemoveActor2D(Annotations[i].textActor);
+            Annotations.erase(Annotations.begin()+i);
+        }
+    }
     if(!whole)
         showComponentSurface();
 }
@@ -554,20 +595,21 @@ void VTKSurface::render(Window *window)
     cout << connectedComponents.size() << endl;
     //vtkIdType npts; vtkIdType *pts;
     for(int i=0; i<connectedComponents.size(); i++) {
+        allActors.push_back(vtkSmartPointer<vtkActor>::New());
+        visible.push_back(true);
         connectedComponents[i]->InitTraversal();
         if(connectedComponents[i]->GetNumberOfCells()>threshold) {
             vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
-            polydata->DeepCopy(wholeSurfacePolygons);
+            polydata->ShallowCopy(wholeSurfacePolygons);
             polydata->SetPolys(connectedComponents[i]);
-            vtkSmartPointer<vtkActor> act = vtkSmartPointer<vtkActor>::New();
             vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New();
             map->SetInputData(polydata);
             map->ScalarVisibilityOff();
-            act->SetMapper(map);
-            act->GetProperty()->SetColor(red, blue, green);
-            act->GetProperty()->SetOpacity(1.0);
-            actor1.push_back(act);
-            renderer->AddActor(act);
+            allActors[i]->SetMapper(map);
+            allActors[i]->GetProperty()->SetColor(red, blue, green);
+            allActors[i]->GetProperty()->SetOpacity(1.0);
+            actor1.push_back(allActors[i]);
+            renderer->AddActor(allActors[i]);
         }
         else {
             while(connectedComponents[i]->GetNextCell(npts, pts))
@@ -591,6 +633,7 @@ void VTKSurface::render(Window *window)
     iren->SetRenderWindow(renderer->GetRenderWindow());
     iren->Initialize();
     iren->SetInteractorStyle(style);
+    style->setVTKSurface(this);
     //iren->SetPicker(pointPicker);
 }
 

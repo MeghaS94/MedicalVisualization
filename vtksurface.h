@@ -52,9 +52,10 @@ struct Annotation{
     float r;
     float g;
     float b;
-    //Actor
-    //Renderer
-    //point id's
+    vtkSmartPointer<vtkActor> actor;
+    vtkSmartPointer<vtkActor> surfaceActor;
+    vtkSmartPointer<vtkActor2D> textActor;
+    int index;
 };
 
 class MouseInteractorStylePP;
@@ -93,6 +94,8 @@ private :
     long long big;
     vtkSmartPointer<vtkActor> actor;
     vector<vtkSmartPointer<vtkActor> > actor1;
+    vector<vtkSmartPointer<vtkActor> > allActors;
+    vector<bool> visible;
     vtkSmartPointer<vtkActor> actor2;
     vtkSmartPointer<vtkPolyDataMapper> mapper1;
     vtkSmartPointer<vtkPolyDataMapper> mapper2;
@@ -106,9 +109,7 @@ private :
 public:
     VTKSurface(double isovalue_start, double isovalue_end);
     VTKSurface(double isovalue_start, double isovalue_end, float r, float g, float b);
-
-    void mousePressEvent(QMouseEvent *event);
-
+    vector<vtkSmartPointer<vtkActor> > getActors();
     void setImageData(ImageData* data);
     void setLayers(Layer* layers, int n);
     void render(Window *window);

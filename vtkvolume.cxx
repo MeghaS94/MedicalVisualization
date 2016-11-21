@@ -32,6 +32,7 @@ VTKVolume::VTKVolume()
     actor3 = vtkSmartPointer<vtkActor>::New();
     colorFun = vtkSmartPointer<vtkColorTransferFunction>::New();
     opacityFun = vtkSmartPointer<vtkPiecewiseFunction>::New();
+    currentLayerTab = -1;
 }
 
 /*void VTKVolume::readData(string foldername)
@@ -57,6 +58,19 @@ void VTKVolume::setImageData(ImageData* data) {
 void VTKVolume::setLayers(Layer* layers, int n) {
     this->layers = layers;
     numberOfLayers = n;
+}
+
+void VTKVolume::setCustomLayers(Layer* customLayers, int n) {
+    this->customLayers = customLayers;
+    numberOfCustomLayers = n;
+}
+
+vtkSmartPointer<vtkColorTransferFunction> VTKVolume::getColorFun() {
+    return colorFun;
+}
+
+vtkSmartPointer<vtkPiecewiseFunction> VTKVolume::getOpacityFun() {
+    return opacityFun;
 }
 
 void VTKVolume::createVolume()
@@ -105,7 +119,7 @@ void VTKVolume::updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int 
     cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
     makeIntervals();
     //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
-    //cout  << "x: " << bounds[0] << "x: " << bounds[1] << " y: " << bounds[2] << " y: " << bounds[3] << " z: " << bounds[4] << " z: " << bounds[5] << endl;
+    cout  << "x: " << bounds[0] << "x: " << bounds[1] << " y: " << bounds[2] << " y: " << bounds[3] << " z: " << bounds[4] << " z: " << bounds[5] << endl;
     //imageData->getOriginalImageData()->GetDimensions(dims);
     //cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
     //data->SetInputData(extractVOI->GetOutput());
@@ -145,7 +159,7 @@ void VTKVolume::makeIntervals()
             //{
                 //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
                 float pixel =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
-                cout << "Intensity along a ray : "<<pixel << endl;
+                //cout << "Intensity along a ray : "<<pixel << endl;
                 if (pixel < min)
                         {
                        min = pixel;
@@ -198,10 +212,10 @@ void VTKVolume::makeIntervals()
        //}
    }
 
-   cout << "print histogram" << endl;
+   //cout << "print histogram" << endl;
    for (int j=0;j< intervals.size();j++)
    {
-       cout << intervals[j][0] << " - " << intervals[j][1] << " -> " << counts[j] << endl;
+       //cout << intervals[j][0] << " - " << intervals[j][1] << " -> " << counts[j] << endl;
    }
 
 
@@ -277,10 +291,10 @@ void VTKVolume::render(Window *window)
     //-------------------------------------------------------------------
     //setting the lighting for the volume
 
-    for(int i=0; i<numberOfLayers; i++) {
-        colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
-                layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
-    }
+    //for(int i=0; i<numberOfLayers; i++) {
+    //    colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
+    //            layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
+    //}
 
     property->ShadeOn();
     property->SetAmbient(0.7);
@@ -325,20 +339,52 @@ void VTKVolume::render(Window *window)
     volumeRenderer->ResetCamera();
 }
 
+void VTKVolume::changeLayerMode(int mode) {
+    currentLayerTab = mode;
+}
+
 void VTKVolume::updateTransferFunctions() {
-    //colorFun->RemoveAllPoints();
-    //opacityFun->RemoveAllPoints();
-    //opacityFun->AddSegment(minIntensity, 0, maxIntensity, 0);
-    for(int i=0; i<numberOfLayers; i++) {
-        if(!layers[i].on) {
-            opacityFun->AddSegment(layers[i].isovalueStart, 0, layers[i].isovalueEnd, 0);
+    colorFun->RemoveAllPoints();
+    opacityFun->RemoveAllPoints();
+    if(currentLayerTab==1) {
+        colorFun->AddRGBSegment(minIntensity, 0, 0, 0, maxIntensity, 0, 0, 0);
+        opacityFun->AddSegment(minIntensity, 0, maxIntensity, 0);
+        for(int i=0; i<numberOfLayers; i++) {
+            if(layers[i].on) {
+                //opacityFun->AddSegment(layers[i].isovalueStart, 0, layers[i].isovalueEnd, 0);
+                //colorFun->AddRGBSegment(layers[i].isovalueStart, 0, 0, 0, layers[i].isovalueEnd, 0, 0, 0);
+                opacityFun->AddPoint(layers[i].isovalueStart-0.000001, 0);
+                opacityFun->AddPoint(layers[i].isovalueEnd+0.000001, 0);
+                colorFun->AddRGBPoint(layers[i].isovalueStart-0.000001, 0, 0, 0);
+                colorFun->AddRGBPoint(layers[i].isovalueEnd+0.000001, 0, 0, 0);
+            }
+        }
+        for(int i=0; i<numberOfLayers; i++) {
+            if(layers[i].on) {
+                colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
+                    layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
+                opacityFun->AddSegment(layers[i].isovalueStart, 1, layers[i].isovalueEnd, 1);
+            }
         }
     }
-    for(int i=0; i<numberOfLayers; i++) {
-        if(layers[i].on) {
-            colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
-                layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
-            opacityFun->AddSegment(layers[i].isovalueStart, 1, layers[i].isovalueEnd, 1);
+    else if(currentLayerTab==0) {
+        colorFun->AddRGBSegment(minIntensity, 0, 0, 0, maxIntensity, 0, 0, 0);
+        opacityFun->AddSegment(minIntensity, 0, maxIntensity, 0);
+        for(int i=0; i<numberOfCustomLayers; i++) {
+            if(customLayers[i].on) {
+                //opacityFun->AddSegment(customLayers[i].isovalueStart, 0, customLayers[i].isovalueEnd, 0);
+                opacityFun->AddPoint(customLayers[i].isovalueStart-0.000001, 0);
+                opacityFun->AddPoint(customLayers[i].isovalueEnd+0.000001, 0);
+                colorFun->AddRGBPoint(customLayers[i].isovalueStart-0.000001, 0, 0, 0);
+                colorFun->AddRGBPoint(customLayers[i].isovalueEnd+0.000001, 0, 0, 0);
+            }
+        }
+        for(int i=0; i<numberOfCustomLayers; i++) {
+            if(customLayers[i].on) {
+                colorFun->AddRGBSegment(customLayers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
+                    customLayers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
+                opacityFun->AddSegment(customLayers[i].isovalueStart, 1, customLayers[i].isovalueEnd, 1);
+            }
         }
     }
     volumeRenderer->GetRenderWindow()->Render();

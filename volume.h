@@ -23,6 +23,7 @@ public:
     virtual void render(Window* window) = 0;
     virtual void setImageData(ImageData* data) = 0;
     virtual void setLayers(Layer* layers, int numberOfLayers) = 0;
+    virtual void setCustomLayers(Layer* customLayers, int numberOfCustomLayers) = 0;
     virtual void createVolume() = 0;
     virtual void updateVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax)=0;
     virtual void addPadding()=0;
@@ -32,6 +33,7 @@ public:
     virtual void coronalPlane(bool visibility)=0;
     virtual void sagittalPlane(bool visibility)=0;
     virtual void updateTransferFunctions()=0;
+    virtual void changeLayerMode(int mode)=0;
     float getMinIntensity();
     float getMaxIntensity();
 };

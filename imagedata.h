@@ -12,6 +12,7 @@ public:
     ImageData();
     virtual void loadData(string foldername)=0;
     virtual int* getExtent()=0;
+    virtual double* getRange()=0;
     virtual vector<double> Spacing()=0;
 };
 

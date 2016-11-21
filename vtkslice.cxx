@@ -21,6 +21,7 @@ VTKSlice::VTKSlice(int type, Controller* c) : Slice(type)
     slice = vtkSmartPointer<vtkImageReslice>::New();
     renderer = vtkSmartPointer<vtkRenderer>::New();
     controller = c;
+    actor = vtkSmartPointer<vtkImageActor>::New();
 }
 
 vtkSmartPointer<vtkImageReslice> VTKSlice::getSlice() {
@@ -45,8 +46,9 @@ Controller* VTKSlice::getController() {
     data->Update();
 }*/
 
-void VTKSlice::setImageData(ImageData* data) {
+void VTKSlice::setImageDataVolume(ImageData* data, Volume* v) {
     imageData = (VTKImageData*) data;
+    volume = (VTKVolume*) v;
 }
 
 void VTKSlice::createSlice() {
@@ -102,6 +104,25 @@ void VTKSlice::updateSlice() {
     renderer->GetRenderWindow()->Render();
 }
 
+void VTKSlice::updateTransferFunction() {
+    // Map the image through the lookup table
+    vtkSmartPointer<vtkImageMapToColors> color =
+      vtkSmartPointer<vtkImageMapToColors>::New();
+    color->SetLookupTable(volume->getColorFun());
+    color->SetInputConnection(slice->GetOutputPort());
+    actor->GetMapper()->SetInputConnection(color->GetOutputPort());
+    renderer->GetRenderWindow()->Render();
+}
+
+double VTKSlice::getPosition() {
+    if(type==1)
+        return (slice->GetResliceAxes()->GetElement(2, 3)-getData()->GetBounds()[4])/getData()->GetSpacing()[2];
+    else if(type==2)
+        return (slice->GetResliceAxes()->GetElement(1, 3)-getData()->GetBounds()[2])/getData()->GetSpacing()[1];
+    else
+        return (slice->GetResliceAxes()->GetElement(0, 3)-getData()->GetBounds()[0])/getData()->GetSpacing()[0];
+}
+
 void VTKSlice::render(Window* window ) {
     // Create a greyscale lookup table
     vtkSmartPointer<vtkLookupTable> table =
@@ -117,12 +138,9 @@ void VTKSlice::render(Window* window ) {
     // Map the image through the lookup table
     vtkSmartPointer<vtkImageMapToColors> color =
       vtkSmartPointer<vtkImageMapToColors>::New();
-    color->SetLookupTable(table);
+    color->SetLookupTable(volume->getColorFun());
     color->SetInputConnection(slice->GetOutputPort());
 
-    // Display the image
-    vtkSmartPointer<vtkImageActor> actor =
-      vtkSmartPointer<vtkImageActor>::New();
     actor->GetMapper()->SetInputConnection(color->GetOutputPort());
 
     renderer->AddActor(actor);
@@ -192,7 +210,7 @@ void vtkSliceInteractionCallback::Execute(vtkObject *, unsigned long event, void
             // Increment slice position by deltaY of mouse
             int deltaY = lastPos[1] - currPos[1];
             slice->getSlice()->Update();
-            double sliceSpacing = slice->getSlice()->GetOutput()->GetSpacing()[2];
+            double sliceSpacing = 0.05;//slice->getSlice()->GetOutput()->GetSpacing()[0];
             double bounds[6];
             slice->getData()->GetBounds(bounds);
             vtkMatrix4x4 *matrix = slice->getSlice()->GetResliceAxes();
@@ -201,8 +219,8 @@ void vtkSliceInteractionCallback::Execute(vtkObject *, unsigned long event, void
             double center[4];
             point[0] = 0.0;
             point[1] = 0.0;
-            //point[2] = sliceSpacing * deltaY;
-            point[2] = deltaY;
+            point[2] = sliceSpacing * deltaY;
+            //point[2] = deltaY;
             point[3] = 1.0;
             matrix->MultiplyPoint(point, center);
             if(center[0]<bounds[0])

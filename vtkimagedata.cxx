@@ -2,6 +2,8 @@
 //#include <vtkGDCMImageReader.h>
 #include <vtkDirectory.h>
 #include <vtkStringArray.h>
+#include <vtkPointData.h>
+#include <vtkDataArray.h>
 #include "vtkimagedata.h"
 
 VTKImageData::VTKImageData()
@@ -64,4 +66,8 @@ vector<double> VTKImageData::Spacing()
 
 int* VTKImageData::getExtent() {
     return originalImageData->GetExtent();
+}
+
+double* VTKImageData::getRange() {
+    return originalImageData->GetPointData()->GetScalars()->GetRange();
 }

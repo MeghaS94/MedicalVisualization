@@ -28,6 +28,7 @@ Controller::Controller(Ui::Widget* ui_arg1, Ui::Widget2* ui_arg2)
     sagittalSlice = new VTKSlice(3, this);
     surface = new VTKSurface(0,0,1,1,1);
     status = true;
+    currentLayerTab = 0;
 }
 
 void Controller::setFolderName(string foldername) {
@@ -44,22 +45,23 @@ void Controller::initialize()
     //volume->readData(foldername);
     volume->setImageData(imageData);
     volume->setLayers(&layers[0], layers.size());
+    volume->setCustomLayers(&customLayers[0], customLayers.size());
     volume->createVolume();
     volume->makeIntervals();
     volume->render(window1);
 
     //axialSlice->readData(foldername);
-    axialSlice->setImageData(imageData);
+    axialSlice->setImageDataVolume(imageData, volume);
     axialSlice->createSlice();
     axialSlice->render(window2);
 
     //coronalSlice->readData(foldername);
-    coronalSlice->setImageData(imageData);
+    coronalSlice->setImageDataVolume(imageData, volume);
     coronalSlice->createSlice();
     coronalSlice->render(window3);
 
     //sagittalSlice->readData(foldername);
-    sagittalSlice->setImageData(imageData);
+    sagittalSlice->setImageDataVolume(imageData, volume);
     sagittalSlice->createSlice();
     sagittalSlice->render(window4);
 
@@ -105,6 +107,31 @@ void Controller::readIsovalues() {
         isoEnd = atof(tokens);
         layers.push_back(Layer(name, isoStart, isoEnd, false));
     }
+    customLayers.push_back(Layer("Custom1", 0, 0, false));
+    ui1->minBox1->setMinimum((int) imageData->getRange()[0]);
+    ui1->minBox1->setMaximum((int) imageData->getRange()[1]);
+    ui1->maxBox1->setMinimum((int) imageData->getRange()[0]);
+    ui1->maxBox1->setMaximum((int) imageData->getRange()[1]);
+    customLayers.push_back(Layer("Custom2", 0, 0, false));
+    ui1->minBox2->setMinimum((int) imageData->getRange()[0]);
+    ui1->minBox2->setMaximum((int) imageData->getRange()[1]);
+    ui1->maxBox2->setMinimum((int) imageData->getRange()[0]);
+    ui1->maxBox2->setMaximum((int) imageData->getRange()[1]);
+    customLayers.push_back(Layer("Custom3", 0, 0, false));
+    ui1->minBox3->setMinimum((int) imageData->getRange()[0]);
+    ui1->minBox3->setMaximum((int) imageData->getRange()[1]);
+    ui1->maxBox3->setMinimum((int) imageData->getRange()[0]);
+    ui1->maxBox3->setMaximum((int) imageData->getRange()[1]);
+    customLayers.push_back(Layer("Custom4", 0, 0, false));
+    ui1->minBox4->setMinimum((int) imageData->getRange()[0]);
+    ui1->minBox4->setMaximum((int) imageData->getRange()[1]);
+    ui1->maxBox4->setMinimum((int) imageData->getRange()[0]);
+    ui1->maxBox4->setMaximum((int) imageData->getRange()[1]);
+    customLayers.push_back(Layer("Custom5", 0, 0, false));
+    ui1->minBox5->setMinimum((int) imageData->getRange()[0]);
+    ui1->minBox5->setMaximum((int) imageData->getRange()[1]);
+    ui1->maxBox5->setMinimum((int) imageData->getRange()[0]);
+    ui1->maxBox5->setMaximum((int) imageData->getRange()[1]);
 }
 
 void Controller::drawSurface() {
@@ -121,7 +148,10 @@ void Controller::drawSurface() {
     ui2->number->setText(QString::number(surface->getNumberOfTriangles(status)));
     volume->addPadding();
     surface->setImageData(imageData);
-    surface->setLayers(&layers[0], layers.size());
+    if(currentLayerTab!=0)
+        surface->setLayers(&layers[0], layers.size());
+    else
+        surface->setLayers(&customLayers[0], customLayers.size());
     surface->createSurface();
     surface->render(window5);
     ui2->threshold->setMinimum(surface->getMinimum());
@@ -183,6 +213,9 @@ void Controller::updateVolumePlanes() {
     volume->updatePlane(axialSlice, 1);
     volume->updatePlane(coronalSlice, 2);
     volume->updatePlane(sagittalSlice,3);
+    ui1->axial->setText(QString::number(axialSlice->getPosition()));
+    ui1->coronal->setText(QString::number(coronalSlice->getPosition()));
+    ui1->sagittal->setText(QString::number(sagittalSlice->getPosition()));
 }
 
 void Controller::extractVOI(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax) {
@@ -208,11 +241,53 @@ void Controller::sagittalPlane(bool visibility) {
 }
 
 void Controller::setLayer(int i, bool status) {
+    volume->changeLayerMode(1);
+    currentLayerTab=1;
     layers[i].on=status;
+}
+
+void Controller::setCustomLayer(int i, bool status) {
+    volume->changeLayerMode(0);
+    currentLayerTab=0;
+    customLayers[i].on=status;
+}
+
+void Controller::customValMin(int i, int val) {
+    customLayers[i].isovalueStart = (float) val;
+    //cout << layers[layers.size()-1].isovalueStart << endl;
+    volume->updateTransferFunctions();
+    axialSlice->updateTransferFunction();
+    sagittalSlice->updateTransferFunction();
+    coronalSlice->updateTransferFunction();
+}
+
+void Controller::customValMax(int i, int val) {
+    customLayers[i].isovalueEnd = (float) val;
+    //cout << layers[layers.size()-1].isovalueEnd << endl;
+    volume->updateTransferFunctions();
+    axialSlice->updateTransferFunction();
+    sagittalSlice->updateTransferFunction();
+    coronalSlice->updateTransferFunction();
+}
+
+void Controller::changeLayerMode(int mode) {
+    volume->changeLayerMode(mode);
+    currentLayerTab=mode;
 }
 
 void Controller::updateTransferFunctions() {
     volume->updateTransferFunctions();
+    axialSlice->updateTransferFunction();
+    sagittalSlice->updateTransferFunction();
+    coronalSlice->updateTransferFunction();
+}
+
+void Controller::resetTransferFunctions() {
+    volume->changeLayerMode(-1);
+    volume->updateTransferFunctions();
+    axialSlice->updateTransferFunction();
+    sagittalSlice->updateTransferFunction();
+    coronalSlice->updateTransferFunction();
 }
 
 void Controller::changeMode(int mode) {

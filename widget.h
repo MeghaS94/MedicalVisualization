@@ -47,7 +47,23 @@ private slots:
     void on_checkBox_12_clicked(bool status);
     void on_checkBox_13_clicked(bool status);
     void on_checkBox_14_clicked(bool status);
-    void on_btnShow_clicked();
+    void on_checkBox_15_clicked(bool status);
+    void on_minBox1_valueChanged(int val);
+    void on_maxBox1_valueChanged(int val);
+    void on_checkBox_16_clicked(bool status);
+    void on_minBox2_valueChanged(int val);
+    void on_maxBox2_valueChanged(int val);
+    void on_checkBox_17_clicked(bool status);
+    void on_minBox3_valueChanged(int val);
+    void on_maxBox3_valueChanged(int val);
+    void on_checkBox_18_clicked(bool status);
+    void on_minBox4_valueChanged(int val);
+    void on_maxBox4_valueChanged(int val);
+    void on_checkBox_19_clicked(bool status);
+    void on_minBox5_valueChanged(int val);
+    void on_maxBox5_valueChanged(int val);
+    void on_tabMode_currentChanged(int mode);
+    void on_btnReset_clicked();
 };
 
 #endif // WIDGET_H

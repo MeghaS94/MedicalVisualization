@@ -33,7 +33,12 @@ public:
     void coronalPlane(bool visibility);
     void sagittalPlane(bool visibility);
     void setLayer(int i, bool status);
+    void setCustomLayer(int i, bool status);
+    void customValMin(int i, int val);
+    void customValMax(int i, int val);
     void updateTransferFunctions();
+    void resetTransferFunctions();
+    void changeLayerMode(int mode);
     void updateSurface(int i);
     void updateThreshold(int val);
     void removeSurfaces();
@@ -58,7 +63,9 @@ private:
     Surface* surface;
     string foldername;
     vector <Layer> layers;
+    vector <Layer> customLayers;
     bool status;
+    int currentLayerTab;
 };
 
 #endif // CONTROLLER_H
