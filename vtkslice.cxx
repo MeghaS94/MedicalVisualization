@@ -12,9 +12,23 @@
 #include <vtkDICOMImageReader.h>
 #include <vtkInteractorStyleImage.h>
 #include <vtkPolyData.h>
+#include <vtkVersion.h>
+#include <vtkChartXY.h>
+#include <vtkPlot.h>
+#include <vtkTable.h>
+#include <vtkIntArray.h>
+#include <vtkContextView.h>
+#include <vtkContextActor.h>
+#include <vtkContextScene.h>
+#include <vtkRenderWindowInteractor.h>
+
+#include <set>
 #include "vtkslice.h"
 #include "window.h"
 #include "vtkwindow.h"
+
+#define VTK_CREATE(type, name) \
+  vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
 
 VTKSlice::VTKSlice(int type, Controller* c) : Slice(type)
 {
@@ -129,6 +143,64 @@ int VTKSlice::getType()
     return type;
 }
 
+void VTKSlice::createHistogram() {
+    vector<double> I;
+    I = intensity();
+    cout << I.size() << endl;
+    set<double> distinct_intensities(I.begin(), I.end());
+    cout << distinct_intensities.size() << endl;
+
+    set<double>::iterator it;
+
+    vector<int> data;
+
+    cout << "set" << endl;
+    for (it =distinct_intensities.begin(); it!= distinct_intensities.end();it++)
+    {
+      //cout << *it << endl;
+      int value = *it;
+      int countI = count(I.begin(), I.end(), value);
+      data.push_back(countI);
+    }
+    VTK_CREATE(vtkContextView, view);
+    view->GetRenderer()->SetBackground(1.0, 1.0, 1.0);
+    view->GetRenderWindow()->SetSize(400, 300);
+    VTK_CREATE(vtkChartXY, chart);
+    view->GetScene()->AddItem(chart);
+
+    // Create a table with some points in it...
+    VTK_CREATE(vtkTable, table);
+
+    VTK_CREATE(vtkIntArray, values);
+    values->SetName("Value");
+    table->AddColumn(values);
+
+    VTK_CREATE(vtkIntArray, arr);
+    arr->SetName("Freq");
+    table->AddColumn(arr);
+    table->SetNumberOfRows(distinct_intensities.size());
+    for (int i = 0; i < distinct_intensities.size(); i++)
+    {
+      table->SetValue(i,0,i+1);
+      table->SetValue(i,1,data[i]);
+    }
+
+    // Add multiple line plots, setting the colors etc
+    vtkPlot *line = 0;
+
+    line = chart->AddPlot(vtkChart::BAR);
+  #if VTK_MAJOR_VERSION <= 5
+    line->SetInput(table, 0, 1);
+  #else
+    line->SetInputData(table, 0, 1);
+  #endif
+    line->SetColor(0, 255, 0, 255);
+    //Finally render the scene and compare the image to a reference image
+    view->GetRenderWindow()->SetMultiSamples(0);
+    view->GetInteractor()->Initialize();
+    view->GetInteractor()->Start();
+}
+
 vector<double> VTKSlice::intensity()
 {
 
@@ -163,7 +235,7 @@ vector<double> VTKSlice::intensity()
 
 }
 
-void VTKSlice::render(Window* window ) {
+void VTKSlice::render(Window* window) {
     // Create a greyscale lookup table
     vtkSmartPointer<vtkLookupTable> table =
       vtkSmartPointer<vtkLookupTable>::New();

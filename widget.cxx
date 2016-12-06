@@ -1,7 +1,6 @@
 #include "widget.h"
 #include "ui_widget.h"
 #include "widget2.h"
-#include "widget3.h"
 #include <string>
 #include <QFileDialog>
 #include "controller.h"
@@ -15,7 +14,7 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
     ui->setupUi(this);
-    controller = new Controller(ui, w.getUi(), w3.getUi());
+    controller = new Controller(ui, w.getUi());
 }
 
 Widget::~Widget()
@@ -38,10 +37,7 @@ void Widget::on_btnGenerate_clicked() {
 
 void Widget::on_btnHistogram_clicked()
 {
-    cout << "clicked here" << endl;
     controller->makeHistogram();
-    w3.setController(controller);
-    //w3.show();
 }
 
 void Widget::on_extractVOI_clicked() {

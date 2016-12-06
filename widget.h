@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <string>
 #include "widget2.h"
-#include "widget3.h"
 
 using namespace std;
 
@@ -26,7 +25,6 @@ private:
     Ui::Widget* ui;
     Controller* controller;
     Widget2 w;
-    Widget3 w3;
 
 private slots:
     void on_btnOpen_clicked();

@@ -21,6 +21,7 @@ public:
     virtual double getPosition() = 0;
     virtual void updateTransferFunction() = 0;
     virtual vector<double> intensity() = 0;
+    virtual void createHistogram() = 0;
 
 protected:
     int type; //1 for axial, 2 for coronal, 3 for sagittal

@@ -35,6 +35,7 @@ public:
     int getType();
     void updateTransferFunction();
     vector<double> intensity();
+    void createHistogram();
 };
 
 class vtkSliceInteractionCallback : public vtkCommand
