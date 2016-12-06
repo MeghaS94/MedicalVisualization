@@ -59,6 +59,7 @@ private:
     Window* window3;
     Window* window4;
     Window* window5;
+    Window* window6;
     ImageData* imageData;
     Volume* volume;
     Slice* axialSlice;

@@ -34,6 +34,7 @@ public:
     double getPosition();
     int getType();
     void updateTransferFunction();
+    vector<double> intensity();
 };
 
 class vtkSliceInteractionCallback : public vtkCommand

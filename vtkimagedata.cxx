@@ -68,6 +68,12 @@ int* VTKImageData::getExtent() {
     return originalImageData->GetExtent();
 }
 
+double* VTKImageData::intensity(int x, int y, int z)
+{
+    double* pixel = static_cast<double*>(originalImageData->GetScalarPointer(x,y,z));
+    return pixel;
+}
+
 double* VTKImageData::getRange() {
     return originalImageData->GetPointData()->GetScalars()->GetRange();
 }

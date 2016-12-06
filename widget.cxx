@@ -39,6 +39,9 @@ void Widget::on_btnGenerate_clicked() {
 void Widget::on_btnHistogram_clicked()
 {
     cout << "clicked here" << endl;
+    controller->makeHistogram();
+    w3.setController(controller);
+    //w3.show();
 }
 
 void Widget::on_extractVOI_clicked() {

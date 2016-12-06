@@ -17,6 +17,7 @@ public:
     int* getExtent();
     double* getRange();
     vector<double> Spacing();
+    double* intensity(int x, int y, int z);
 
 private:
     vtkSmartPointer<vtkImageData> originalImageData;

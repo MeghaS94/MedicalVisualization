@@ -121,11 +121,46 @@ double VTKSlice::getPosition() {
         return (slice->GetResliceAxes()->GetElement(1, 3)-getData()->GetBounds()[2])/getData()->GetSpacing()[1];
     else
         return (slice->GetResliceAxes()->GetElement(0, 3)-getData()->GetBounds()[0])/getData()->GetSpacing()[0];
+
 }
 
 int VTKSlice::getType()
 {
     return type;
+}
+
+vector<double> VTKSlice::intensity()
+{
+
+    cout << "slice size : " << slice->GetResliceAxes()->GetElement(2, 3)-getData()->GetBounds()[0] << ", " <<
+            slice->GetResliceAxes()->GetElement(2, 3)-getData()->GetBounds()[1]<< endl;
+    vtkSmartPointer<vtkImageData> sliceData;
+    sliceData = vtkSmartPointer<vtkImageData>::New();
+    sliceData = slice->GetOutput();
+    int* dims = sliceData->GetDimensions();
+    double scalarRange[2];
+    sliceData->GetScalarRange(scalarRange);
+    cout << scalarRange[0] << "< " << scalarRange[1] << endl;
+      // int dims[3]; // can't do this
+    vector<double> intensities;
+    std::cout << "Dims: " << " x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << std::endl;
+    for (int z = 0; z < dims[2]; z++)
+        {
+        for (int y = 0; y < dims[1]; y++)
+          {
+          for (int x = 0; x < dims[0]; x++)
+            {
+              double color1;
+              color1 = sliceData->GetScalarComponentAsDouble(x,y,z, 0);
+              intensities.push_back(color1);
+              //cout << color1 << endl;
+            //double* pixel = static_cast<double*>(sliceData->GetScalarPointer(x,y,z));
+            //cout << pixel[0] << ", " << pixel[1] << ", " << pixel[2] << endl;
+            }
+          }
+        }
+    return intensities;
+
 }
 
 void VTKSlice::render(Window* window ) {
@@ -149,6 +184,7 @@ void VTKSlice::render(Window* window ) {
     actor->GetMapper()->SetInputConnection(color->GetOutputPort());
 
     renderer->AddActor(actor);
+
 
     ((VTKWindow*)window)->getWidget()->GetRenderWindow()->AddRenderer(renderer);
     renderer->SetBackground(.0, .0, .0);
