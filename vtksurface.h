@@ -36,7 +36,7 @@
 
 using namespace std;
 
-struct compareFunc
+struct compareFunc // to sort two cell arrays based on size
 {
     inline bool operator() (const vtkSmartPointer<vtkCellArray>& arr1, const vtkSmartPointer<vtkCellArray>& arr2)
     {
@@ -52,9 +52,9 @@ struct Annotation{
     float r;
     float g;
     float b;
-    vtkSmartPointer<vtkActor> actor;
-    vtkSmartPointer<vtkActor> surfaceActor;
-    vtkSmartPointer<vtkActor2D> textActor;
+    vtkSmartPointer<vtkActor> actor; // actor of annotation
+    vtkSmartPointer<vtkActor> surfaceActor; // actor of the surface to which the annotation belongs
+    vtkSmartPointer<vtkActor2D> textActor; // actor for the annotation text
     int index;
 };
 
@@ -63,42 +63,38 @@ class MouseInteractorStylePP;
 class VTKSurface : public Surface
 {
 private :
-    //vtkSmartPointer<vtkImageData> volume;
-    //vtkSmartPointer<vtkMarchingCubes> surface;
     vtkSmartPointer<vtkContourFilter> surface;
-    vtkSmartPointer<vtkPolyDataConnectivityFilter> confilter;
     VTKImageData* imageData;
-    vtkSmartPointer<vtkImageData> modifiedData;
+    vtkSmartPointer<vtkImageData> modifiedData; // modifed to 1-0 volume, i.e 1 for values within isovalue range, 0 otherwise
     vtkSmartPointer<vtkCellArray> polyArray; //Array of triangles
-    vector<vtkSmartPointer<vtkCellArray> > connectedComponents;
+    vector<vtkSmartPointer<vtkCellArray> > connectedComponents; //vector of cell arrays (arrays of triangles)
     vector<int> numberOfOpenEdges;
     float red; float blue; float green;
     int extent[6];
     double bounds[6];
-    map <vtkIdType, bool> Array;
-    map <vtkIdType, bool> Array2;
+    map <vtkIdType, bool> Array; // map to keep track of covered points
+    map <vtkIdType, bool> Array2; // map to keep track of covered cells or triangles
     vtkSmartPointer<vtkCellLinks> cellLinksFilter;
     vtkSmartPointer<vtkPolyData> surfacePolygons;
     vtkSmartPointer<vtkPolyData> wholeSurfacePolygons;
     vtkSmartPointer<vtkRenderer> renderer;
-    vector<vtkIdType*> subsurfaces;
+    vector<vtkIdType*> subsurfaces; // vector of triangles of the current connected component
     Layer* layers;
     int count;
     int numberOfLayers;
     int current_surface;
     bool whole;
     int threshold;
-    vtkSmartPointer<vtkCellArray> celldata2;
-    vtkSmartPointer<vtkPolyData> data2;
+    vtkSmartPointer<vtkCellArray> celldata2; // to show the part of the surface with number of triangles below threshold
+    vtkSmartPointer<vtkPolyData> data2; // to show the part of the surface with number of triangles below threshold
     long long small;
     long long big;
-    vtkSmartPointer<vtkActor> actor;
-    vector<vtkSmartPointer<vtkActor> > actor1;
-    vector<vtkSmartPointer<vtkActor> > allActors;
-    vector<bool> visible;
-    vtkSmartPointer<vtkActor> actor2;
-    vtkSmartPointer<vtkPolyDataMapper> mapper1;
-    vtkSmartPointer<vtkPolyDataMapper> mapper2;
+    vtkSmartPointer<vtkActor> actor; // actor for whole surface
+    vector<vtkSmartPointer<vtkActor> > actor1; // vector of actors for each visible component surface
+    vector<vtkSmartPointer<vtkActor> > allActors; // vector of all actors
+    vector<bool> visible; // vector to mark visibility of each component
+    vtkSmartPointer<vtkActor> actor2; // for celldata2
+    vtkSmartPointer<vtkPolyDataMapper> mapper2; // for celldata2
     bool pick;
     vtkSmartPointer<MouseInteractorStylePP> style ;
     //spacing
@@ -107,7 +103,6 @@ private :
     double spacing_z;
 
 public:
-    VTKSurface(double isovalue_start, double isovalue_end);
     VTKSurface(double isovalue_start, double isovalue_end, float r, float g, float b);
     vector<vtkSmartPointer<vtkActor> > getActors();
     void setImageData(ImageData* data);

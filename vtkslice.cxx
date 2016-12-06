@@ -50,16 +50,6 @@ Controller* VTKSlice::getController() {
     return controller;
 }
 
-/*void VTKSlice::readData(string foldername) {
-    vtkSmartPointer<vtkDICOMImageReader> temp_data = vtkSmartPointer<vtkDICOMImageReader>::New();
-    temp_data->SetDirectoryName(foldername.c_str());
-    temp_data->Update();
-    data = temp_data;
-    data->SetDataByteOrderToLittleEndian();
-    data->UpdateWholeExtent();
-    data->Update();
-}*/
-
 void VTKSlice::setImageDataVolume(ImageData* data, Volume* v) {
     imageData = (VTKImageData*) data;
     volume = (VTKVolume*) v;
@@ -143,6 +133,7 @@ int VTKSlice::getType()
     return type;
 }
 
+// Drawing histogram
 void VTKSlice::createHistogram() {
     vector<double> I;
     I = intensity();

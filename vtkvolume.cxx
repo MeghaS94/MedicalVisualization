@@ -35,17 +35,6 @@ VTKVolume::VTKVolume()
     currentLayerTab = -1;
 }
 
-/*void VTKVolume::readData(string foldername)
-{
-    data->SetDirectoryName(foldername.c_str());
-    data->Update();
-    imageData = data->GetOutput();
-    imageData->GetDimensions(dims);
-    imageData->GetBounds(bounds);
-    cout  << "x: " << dims[0] << " y: " << dims[1] << " z: " << dims[2] << endl;
-    cout  << "x: " << bounds[0] << "x: " << bounds[1] << " y: " << bounds[2] << " y: " << bounds[3] << " z: " << bounds[4] << " z: " << bounds[5] << endl;
-}*/
-
 void VTKVolume::setImageData(ImageData* data) {
     imageData = (VTKImageData*) data;
     imageData->getImageData()->GetExtent(extent);
@@ -84,6 +73,7 @@ void VTKVolume::createVolume()
     volume->SetMapper(volmapper);
 }
 
+// add padding to the volume to get a closed volume
 void VTKVolume::addPadding() {
     extractVOI->SetInputData(imageData->getOriginalImageData());
     int tempextent[6];
@@ -141,86 +131,10 @@ void VTKVolume::makeIntervals()
     cout  << "min intensity: " << range[0] << " max intensity: " << range[1] << endl;
     cout  << "x: " << extent[0] << "x: " << extent[1] << " y: " << extent[2] << " y: " << extent[3] << " z: " << extent[4] << " z: " << extent[5] << endl;
 
-    //voi extents - x-> 100, 400 | 250, 511
-    //y-> 50, 250 | 50, 210
-    //z -> 50, 200 | 0, 249
-
-    int y =  ( extent[3] + extent[2] )/2.0;
-    int z = ( extent[5] + extent[4] )/2.0;
-    int count = 0;
-    float min, max;
-    min = (imageData->getImageData()->GetScalarComponentAsFloat(100,y,z,0));
-    max = (imageData->getImageData()->GetScalarComponentAsFloat(100,y,z,0));
-    for(int x=extent[0];x<=extent[1];x++)
-    {
-        //for(int y=extent[2];y<=extent[3];y++)
-        //{
-          //  for(int z=extent[4];z<=extent[5];z++)
-            //{
-                //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
-                float pixel =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
-                //cout << "Intensity along a ray : "<<pixel << endl;
-                if (pixel < min)
-                        {
-                       min = pixel;
-                }
-                if (pixel > max)
-                {
-                    max = pixel;
-                }
-                //int count = 0;
-
-            //}
-        //}
-    }
-
-   vector< vector<float> >  intervals;
-   vector<int> counts;
-   float num_of_intervals = (max - min)/10.0;
-   float temp = min;
-   for(int i=0;i<num_of_intervals;i++)
-        {
-        vector<float> interval;
-        interval.push_back(temp);
-        interval.push_back(temp+ 10.0);
-        temp = temp +10.0;
-        intervals.push_back(interval);
-        counts.push_back(0);
-         }
-
-
-   for(int x=extent[0];x<=extent[1];x++)
-   {
-       //for(int y=extent[2];y<=extent[3];y++)
-       //{
-         //  for(int z=extent[4];z<=extent[5];z++)
-           //{
-               //double* pixel =  static_cast<double*>(data->GetOutput()->GetScalarComponentAsFloat(x,y,z,1));
-               float pixel =  (imageData->getImageData()->GetScalarComponentAsFloat(x,y,z,0));
-               //cout << "Intensity along a ray : "<<pixel << endl;
-               for (int j=0;j< intervals.size();j++)
-               {
-                   if (intervals[j][0] < pixel &&  intervals[j][1] > pixel )
-                   {
-                       counts[j] += 1;
-                       break;
-                   }
-               }
-
-
-           //}
-       //}
-   }
-
-   //cout << "print histogram" << endl;
-   for (int j=0;j< intervals.size();j++)
-   {
-       //cout << intervals[j][0] << " - " << intervals[j][1] << " -> " << counts[j] << endl;
-   }
-
-
 }
 
+
+// Plane equations
 void VTKVolume::changePlanes() {
     double xpad = (bounds[1]-bounds[0])/10.0;
     double ypad = (bounds[3]-bounds[2])/10.0;
@@ -257,44 +171,6 @@ void VTKVolume::render(Window *window)
     property->SetColor(colorFun);
     property->SetScalarOpacity(opacityFun);
     //property->SetInterpolationTypeToLinear();
-
-    //-------------------------Transfer Functions-------------------------
-    //float red = 0.93; float green = 0.25; float blue = 0.30; float opacity = 1.0;
-
-      //float intervalLen = (maxIntensity - minIntensity)/6.0;
-      //cout << "Intensity range    " << "Count  " << endl;
-      //cout << "--------------------------------" << endl;
-      //Assigning colors to the volume R,G,B.
-      /*colorFun->AddRGBPoint( minIntensity, 0.0, 0.0, 0.0 );                   cout << minIntensity << " to " << minIntensity +intervalLen << "        " << Map[0] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen, 0.6, 0.6, 0 );       cout << minIntensity+intervalLen << " to " << minIntensity +2*intervalLen << "       " <<Map[1] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*2 ,  0, 0.7, 0.7 );   cout << minIntensity+2*intervalLen << " to " << minIntensity +3*intervalLen<< "      "  <<Map[2] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*3,  0.8, 0.0, 0.0 );    cout << minIntensity+3*intervalLen << " to " << minIntensity +4*intervalLen<< "      "  <<Map[3] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*4,  0.0, 0.7, 0.0 );    cout << minIntensity+4*intervalLen << " to " << minIntensity +5*intervalLen<< "      "  <<Map[4] << endl;
-      colorFun->AddRGBPoint( minIntensity+intervalLen*5,  0.0, 0.0, 0.6 );    cout << minIntensity+5*intervalLen << " to " << minIntensity +6*intervalLen<< "      "  <<Map[5] << endl;
-      colorFun->AddRGBPoint( maxIntensity,  0.0, 0.0, 0.6 );
-
-      //colorFun->AddRGBPoint( 80 , 0.5, 0.5, 0.5 );
-      //colorFun->AddRGBPoint( 90 , 0.7, 0.7, 0.7);
-      //for(int i=0; i<1000; i+=10)
-      //    printf("%d %f %f %f\n", i, colorFun->GetRedValue(i), colorFun->GetGreenValue(i), colorFun->GetBlueValue(i));
-
-      //ratio of number of pixels having that intensity/total num of voxels -> to determine opacity
-      opacityFun->AddPoint(minIntensity,0 );
-      opacityFun->AddPoint(minIntensity+intervalLen, 2*Map[1] / voxel_count );
-      opacityFun->AddPoint(minIntensity+2*intervalLen, 2*Map[2] / voxel_count );
-      opacityFun->AddPoint(minIntensity+3*intervalLen, 2*Map[3] / voxel_count  );
-      opacityFun->AddPoint(minIntensity+4*intervalLen, 2*Map[4] / voxel_count );
-      opacityFun->AddPoint(minIntensity+5*intervalLen, 2*Map[5] / voxel_count );
-      opacityFun->AddPoint(maxIntensity, 0.3 );
-      //opacityFun->AddPoint(80, 0.03 );*/
-
-    //-------------------------------------------------------------------
-    //setting the lighting for the volume
-
-    //for(int i=0; i<numberOfLayers; i++) {
-    //    colorFun->AddRGBSegment(layers[i].isovalueStart, colours[i][0][0], colours[i][0][1], colours[i][0][2],
-    //            layers[i].isovalueEnd, colours[i][1][0], colours[i][1][1], colours[i][1][2]);
-    //}
 
     property->ShadeOn();
     property->SetAmbient(0.7);
@@ -343,6 +219,7 @@ void VTKVolume::changeLayerMode(int mode) {
     currentLayerTab = mode;
 }
 
+// Assigning transfer functions
 void VTKVolume::updateTransferFunctions() {
     colorFun->RemoveAllPoints();
     opacityFun->RemoveAllPoints();

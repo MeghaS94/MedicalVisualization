@@ -38,6 +38,7 @@ private :
     vtkSmartPointer<vtkPiecewiseFunction> opacityFun;
     int extent[6];
     double bounds[6];
+    // different colours for the transfer function
     float colours[15][2][3] = {{{0.2,0,0},{1,0,0}},
                                 {{0,0.2,0},{0,1,0}},
                                 {{0,0,0.2},{0,0,1}},

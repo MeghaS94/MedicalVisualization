@@ -139,18 +139,6 @@ class MouseInteractorStylePP : public vtkInteractorStyleTrackballCamera
 
 vtkStandardNewMacro(MouseInteractorStylePP);
 
-VTKSurface::VTKSurface(double isoValue_start, double isoValue_end) : Surface(isoValue_start, isoValue_end)
-{
-    //this constructor is not being used anywhere
-    modifiedData = vtkSmartPointer<vtkImageData>::New();
-    //could use vtk contour filter to get iso-surfaces from ranges
-    //surface = vtkSmartPointer<vtkMarchingCubes>::New();
-    surface = vtkSmartPointer<vtkContourFilter>::New();
-    surface->SetNumberOfContours(1);
-    polyArray = vtkSmartPointer<vtkCellArray>::New();
-    cellLinksFilter = vtkSmartPointer<vtkCellLinks>::New();
-}
-
 VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, float g, float b) : Surface(isoValue_start, isoValue_end)
 {
     modifiedData = vtkSmartPointer<vtkImageData>::New();
@@ -175,7 +163,6 @@ VTKSurface::VTKSurface(double isoValue_start, double isoValue_end, float r, floa
     big=0;
     actor = vtkSmartPointer<vtkActor>::New();
     actor2 = vtkSmartPointer<vtkActor>::New();
-    mapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
     pick = false;
     style = vtkSmartPointer<MouseInteractorStylePP>::New();
@@ -196,6 +183,7 @@ void VTKSurface::setImageData(ImageData* data) {
     imageData->getImageData()->GetBounds(bounds);
 }
 
+// creating the modified 0-1 data and generating the surface
 void VTKSurface::createSurface()
 {
     modifiedData->DeepCopy(imageData->getImageData());
@@ -228,10 +216,6 @@ void VTKSurface::createSurface()
     surface->SetInputData(modifiedData);
     surface->SetValue(0, 0.5);
 
-    //confilter->SetInputConnection(surface->GetOutputPort());
-    //confilter->SetExtractionModeToLargestRegion();
-    //confilter->Update();
-
 }
 
 long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
@@ -245,6 +229,7 @@ long VTKSurface::findConnectedVertsRecur(vtkIdType ID)
         vtkIdType *connectedCells;
         vtkIdType npts; vtkIdType *pts;
         //find cell links and call recursion on them
+        // getting all cells (triangles) of that point all_connected_cells[i]
         connectedCells = cellLinksFilter->GetCells(all_connected_cells[i]);
         //surface->GetOutput()->GetPointCells(all_connected_cells[i], num_of_cells, connectedCells );
         for(int j=0;j<num_of_cells;j++)
@@ -283,6 +268,7 @@ void VTKSurface::makeConnectedSurfaces()
     {
         if(Array[i] == false )
         {
+            // Point i visited
             Array[i] = true;
             //call recursion on every pointID in connectedCells
             subsurfaces.clear();
@@ -291,6 +277,8 @@ void VTKSurface::makeConnectedSurfaces()
         }
     }
     sort(connectedComponents.begin(), connectedComponents.end(), compareFunc());
+
+    // checking number of open edges to check if the surface is closed
     vtkIdType npts; vtkIdType *pts;
     for(int i=0; i<connectedComponents.size(); i++) {
         connectedComponents[i]->InitTraversal();
@@ -407,6 +395,7 @@ int VTKSurface::getCurrentSurface() {
     return current_surface+1;
 }
 
+// Get minimum number of triangles in all connected components
 long VTKSurface::getMinimum() {
     long mini = 10000000;
     for(int i=0; i<connectedComponents.size(); i++) {
@@ -416,6 +405,7 @@ long VTKSurface::getMinimum() {
     return mini;
 }
 
+// Get maximum number of triangles in all connected components
 long VTKSurface::getMaximum() {
     long maxi = 0;
     for(int i=0; i<connectedComponents.size(); i++) {
@@ -425,6 +415,7 @@ long VTKSurface::getMaximum() {
     return maxi;
 }
 
+// updates all the actors according to the threshold
 void VTKSurface::updateThreshold(int val) {
     threshold = val;
     vtkIdType npts; vtkIdType *pts;
@@ -469,7 +460,9 @@ void VTKSurface::updateThreshold(int val) {
         }
         else {
             while(connectedComponents[i]->GetNextCell(npts, pts))
-                celldata2->InsertNextCell(npts, pts);
+                if(visible[i]) {
+                    celldata2->InsertNextCell(npts, pts);
+                }
         }
     }
     vtkIdType temppts[] = {0,0,0};
@@ -478,6 +471,7 @@ void VTKSurface::updateThreshold(int val) {
     renderer->GetRenderWindow()->Render();
 }
 
+// removing all surfaces which are below threshold
 void VTKSurface::removeSurfaces() {
     int i=0;
     while(i<connectedComponents.size() && connectedComponents[i]->GetNumberOfCells()>threshold)
@@ -489,6 +483,7 @@ void VTKSurface::removeSurfaces() {
     updateThreshold(threshold);
 }
 
+// removing a particular connected component surface
 void VTKSurface::removeSurface() {
     //connectedComponents.erase (connectedComponents.begin()+current_surface);
     //numberOfOpenEdges.erase (numberOfOpenEdges.begin()+current_surface);
@@ -505,6 +500,7 @@ void VTKSurface::removeSurface() {
         showComponentSurface();
 }
 
+// getting the number of triangles for the current surface
 long VTKSurface::getNumberOfTriangles(bool status) {
     if(status)
         return polyArray->GetNumberOfCells();
@@ -512,6 +508,7 @@ long VTKSurface::getNumberOfTriangles(bool status) {
         return connectedComponents[current_surface]->GetNumberOfCells();
 }
 
+// create the connected surface from the temporary subsurfaces vector and appending it to connectedComponents
 void VTKSurface::createConnectedSurfaces()
 {
     vtkSmartPointer<vtkCellArray> temp = vtkSmartPointer<vtkCellArray>::New();
@@ -528,6 +525,7 @@ void VTKSurface::createConnectedSurfaces()
         small += temp->GetNumberOfCells();
 }
 
+// Pick mode vs edit mode
 void VTKSurface::changeMode(int mode) {
     if(mode==0)
         pick=false;
@@ -536,6 +534,7 @@ void VTKSurface::changeMode(int mode) {
     style->setPick(pick);
 }
 
+// shift to annotation mode
 void VTKSurface::addAnnotation() {
     style->setAnnotate(true);
 }
@@ -598,6 +597,7 @@ void VTKSurface::render(Window *window)
         allActors.push_back(vtkSmartPointer<vtkActor>::New());
         visible.push_back(true);
         connectedComponents[i]->InitTraversal();
+        // add all major component actors to actor1 vector
         if(connectedComponents[i]->GetNumberOfCells()>threshold) {
             vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
             polydata->ShallowCopy(wholeSurfacePolygons);
@@ -611,6 +611,7 @@ void VTKSurface::render(Window *window)
             actor1.push_back(allActors[i]);
             renderer->AddActor(allActors[i]);
         }
+        // concatenate all minor component to celldata2
         else {
             while(connectedComponents[i]->GetNextCell(npts, pts))
                 celldata2->InsertNextCell(npts, pts);
@@ -627,6 +628,7 @@ void VTKSurface::render(Window *window)
     renderer->AddActor(actor2);
 
     //vtkSmartPointer<vtkPointPicker> pointPicker = vtkSmartPointer<vtkPointPicker>::New();
+    // interactor to pick points
     QVTKInteractor* iren = QVTKInteractor::New();
     style->SetDefaultRenderer(renderer);
     renderer->GetRenderWindow()->SetInteractor(iren);
@@ -642,6 +644,7 @@ void VTKSurface::setSpacing(vector<double> spacing)
     spacing_x = spacing[0]; spacing_y = spacing[1]; spacing_z = spacing[2];
 }
 
+// to write out all the picked components to an stl file
 void VTKSurface::print() {
     vtkSmartPointer<vtkAppendPolyData> appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
     for(int i=0; i<actor1.size(); i++) {
