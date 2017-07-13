@@ -1,0 +1,16 @@
+-I/usr/local/include/vtk-7.0
+-I/usr/include/qt4
+-I/usr/include/qt4/QtGui
+-I/usr/include/qt4/QtCore
+-I/home/megha/3D_Printing_PE/Project/MedicalVisualization/src
+-I/home/megha/3D_Printing_PE/Project/MedicalVisualization/src/build
+-DvtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)
+-DvtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)
+-DvtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)
+-DvtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)
+-D$<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG>
+-DQT_GUI_LIB
+-DQT_CORE_LIB
+-o
+/home/megha/3D_Printing_PE/Project/MedicalVisualization/src/build/moc_imagedata.cxx
+/home/megha/3D_Printing_PE/Project/MedicalVisualization/src/imagedata.h

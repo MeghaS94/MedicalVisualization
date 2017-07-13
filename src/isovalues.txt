@@ -1,0 +1,14 @@
+Bone,226,3071
+Compact Bone (Adult),662,1988
+Compact Bone (Child),586,2198
+Spongial Bone (Adult),148,661
+Spongial Bone (Child),156,585
+Enamel (Adult),1553,2850
+Enamel (Child),2042,3071
+Fat Tissue (Adult),-205,-51
+Fat Tissue (Child),-212,-72
+Muscle Tissue (Adult),-5,135
+Muscle Tissue (Child),-25,139
+Skin Tissue (Adult),-718,-177
+Skin Tissue (Child),-766,-202
+Soft Tissue,-700,225
